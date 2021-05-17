@@ -1,0 +1,19 @@
+{
+  "name": "kharcha-rest",
+  "version": "1.0.0",
+  "description": "REST API for Kharcha using GraphQL and MongoDB",
+  "main": "./src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "REST",
+    "API",
+    "GraphQL",
+    "MongoDB",
+    "TypeScript",
+    "ExpressJS"
+  ],
+  "author": "Ojesh Manandhar",
+  "license": "ISC"
+}
