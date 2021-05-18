@@ -70,5 +70,5 @@ export function login(args: T.loginArgs): T.loginRet {
     };
   }
 
-  throw new CustomError('Incorrect username and password', 401, []);
+  throw new CustomError('Incorrect username and password', 401);
 }
