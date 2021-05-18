@@ -1,17 +1,14 @@
+// packages
 import { buildSchema } from 'graphql';
 
+// schemas
+import * as users from './users';
+
 export default buildSchema(`
-  type userData {
-    _id: String!,
-    username: String!
-  }
+  ${users.types}
 
   type RootMutation {
-    createUser(
-      username: String!, 
-      password: String!,
-      confirmPassword: String!
-    ): userData
+    ${users.mutations}
   }
 
   type RootQuery {

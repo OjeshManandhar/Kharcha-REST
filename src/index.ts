@@ -1,6 +1,6 @@
 // dotenv
-import dotenv from 'dotenv';
-dotenv.config();
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+require('dotenv').config();
 
 // packages
 import express from 'express';
@@ -8,7 +8,7 @@ import bodyParser from 'body-parser';
 import { graphqlHTTP } from 'express-graphql';
 
 // GraphQL
-import schema from 'gql/schema';
+import schema from 'gql/schemas';
 import resolvers from 'gql/resolvers';
 
 // utils
