@@ -1,17 +1,15 @@
-type User = {
-  name: string;
-  email: string;
-};
+// resolvers
+import * as users from './users';
 
-export function hello(): string {
+function hello(): string {
   return 'Hello World';
 }
 
-export function createUser(args: unknown): User {
-  console.log('args:', args);
+const rootResolver = {
+  hello,
+  ...users
+};
 
-  return {
-    email: 'This is the email',
-    name: 'This is the name'
-  };
-}
+console.log('rootResolvers:', rootResolver);
+
+export default rootResolver;

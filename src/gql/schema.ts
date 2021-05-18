@@ -2,12 +2,16 @@ import { buildSchema } from 'graphql';
 
 export default buildSchema(`
   type userData {
-    email: String!,
-    name: String!
+    _id: String!,
+    username: String!
   }
 
   type RootMutation {
-    createUser(email: String!, name: String!, password: String!): userData
+    createUser(
+      username: String!, 
+      password: String!,
+      confirmPassword: String!
+    ): userData
   }
 
   type RootQuery {

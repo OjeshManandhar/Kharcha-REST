@@ -9,7 +9,7 @@ import { graphqlHTTP } from 'express-graphql';
 
 // GraphQL
 import schema from 'gql/schema';
-import * as resolvers from 'gql/resolvers';
+import resolvers from 'gql/resolvers';
 
 // env
 import { PORT } from 'env_config';
