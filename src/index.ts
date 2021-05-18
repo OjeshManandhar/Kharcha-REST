@@ -8,8 +8,8 @@ import bodyParser from 'body-parser';
 import { graphqlHTTP } from 'express-graphql';
 
 // GraphQL
-import schema from 'graphql/schema';
-import * as resolvers from 'graphql/resolver';
+import schema from 'gql/schema';
+import * as resolvers from 'gql/resolvers';
 
 // env
 import { PORT } from 'env_config';
