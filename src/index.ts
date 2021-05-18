@@ -11,6 +11,9 @@ import { graphqlHTTP } from 'express-graphql';
 import schema from 'gql/schema';
 import resolvers from 'gql/resolvers';
 
+// utils
+import CustomError from 'utils/CustomError';
+
 // env
 import { PORT } from 'env_config';
 
@@ -35,13 +38,13 @@ app.use(
     rootValue: resolvers,
     graphiql: true,
     customFormatErrorFn: err => {
-      console.log('err:', err);
-
       if (!err.originalError) {
         return err;
       }
 
-      return JSON.parse(err.message);
+      const { data, status, message } = err.originalError as CustomError;
+
+      return { message, status, data };
     }
   })
 );

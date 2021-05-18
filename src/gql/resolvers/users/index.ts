@@ -1,8 +1,11 @@
+// utils
+import CustomError, { ErrorData } from 'utils/CustomError';
+
 // types
 import type * as T from './types';
 
 export function createUser(args: T.createUserArgs): T.createUserRet {
-  const errors: Array<{ message: string; field: string }> = [];
+  const errors: ErrorData = [];
   const { username, password, confirmPassword } = args;
 
   // Validation
@@ -29,13 +32,7 @@ export function createUser(args: T.createUserArgs): T.createUserRet {
   }
 
   if (errors.length > 0) {
-    const err = {
-      status: 422,
-      data: errors,
-      message: 'Invalid Input'
-    };
-
-    throw new Error(JSON.stringify(err));
+    throw new CustomError('Invalid Input', 422, errors);
   }
 
   return {
