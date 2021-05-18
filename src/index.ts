@@ -33,7 +33,16 @@ app.use(
   graphqlHTTP({
     schema: schema,
     rootValue: resolvers,
-    graphiql: true
+    graphiql: true,
+    customFormatErrorFn: err => {
+      console.log('err:', err);
+
+      if (!err.originalError) {
+        return err;
+      }
+
+      return JSON.parse(err.message);
+    }
   })
 );
 
