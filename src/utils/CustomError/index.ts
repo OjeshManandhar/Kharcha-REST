@@ -6,7 +6,7 @@ class CustomError extends Error {
   data: ErrorData;
 
   constructor(message: string, status: number, data: ErrorData) {
-    super(message);
+    super(message || 'An error occured');
 
     this.status = status || 500;
     this.data = data || [];
