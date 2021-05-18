@@ -3,6 +3,10 @@ export const types = `
     _id: String!
     username: String!
   }
+
+  type authData {
+    token: String!
+  }
 `;
 
 export const mutations = `
@@ -11,4 +15,9 @@ export const mutations = `
     password: String!
     confirmPassword: String!
   ): userData
+
+  login(
+    username: String!
+    password: String!
+  ): authData
 `;

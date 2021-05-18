@@ -10,6 +10,4 @@ const rootResolver = {
   ...users
 };
 
-console.log('rootResolvers:', rootResolver);
-
 export default rootResolver;
