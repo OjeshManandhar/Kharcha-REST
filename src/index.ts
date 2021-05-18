@@ -1,3 +1,7 @@
+// dotenv
+import dotenv from 'dotenv';
+dotenv.config();
+
 // packages
 import express from 'express';
 import bodyParser from 'body-parser';
@@ -6,6 +10,9 @@ import { graphqlHTTP } from 'express-graphql';
 // GraphQL
 import schema from 'graphql/schema';
 import * as resolvers from 'graphql/resolver';
+
+// env
+import { PORT } from 'env_config';
 
 const app = express();
 
@@ -37,6 +44,6 @@ app.use('/', (req, res) => {
   res.send('Hello world!');
 });
 
-app.listen(5000, () => {
-  console.log('Server started at port 5000');
+app.listen(PORT, () => {
+  console.log('Server started at port', PORT);
 });
