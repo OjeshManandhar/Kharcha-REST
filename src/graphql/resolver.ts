@@ -1,8 +1,13 @@
+type User = {
+  name: string;
+  email: string;
+};
+
 export function hello(): string {
   return 'Hello World';
 }
 
-export function createUser(args: object): object {
+export function createUser(args: unknown): User {
   console.log('args:', args);
 
   return {
