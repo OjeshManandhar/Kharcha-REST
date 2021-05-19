@@ -1,10 +1,15 @@
+// model
+import User from 'models/user';
+
 // utils
 import CustomError, { ErrorData } from 'utils/CustomError';
 
 // types
 import type * as T from './types';
 
-export function createUser(args: T.createUserArgs): T.createUserRet {
+export async function createUser(
+  args: T.createUserArgs
+): Promise<T.createUserRet> {
   const errors: ErrorData = [];
   const { username, password, confirmPassword } = args;
 
@@ -36,11 +41,37 @@ export function createUser(args: T.createUserArgs): T.createUserRet {
   }
 
   // Actual work
+  try {
+    // Check if use exist
+    const existingUser = await User.findOne({ username });
 
-  return {
-    _id: username + ' ' + password,
-    username: username
-  };
+    if (existingUser) {
+      throw new CustomError('User already exists', 422, [
+        {
+          message: 'username already in use',
+          field: 'username'
+        }
+      ]);
+    }
+
+    // Create new user
+    const newUser = new User({
+      username,
+      password
+    });
+    const savedUser = await newUser.save();
+
+    return {
+      _id: savedUser._id.toString(),
+      username: savedUser.username
+    };
+  } catch (err) {
+    if (err instanceof CustomError) {
+      throw err;
+    } else {
+      throw new CustomError('User creation failed');
+    }
+  }
 }
 
 export function login(args: T.loginArgs): T.loginRet {
