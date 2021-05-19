@@ -1,10 +1,10 @@
 export const types = `
-  type userData {
+  type UserData {
     _id: String!
     username: String!
   }
 
-  type authData {
+  type AuthPayload {
     token: String!
   }
 `;
@@ -14,10 +14,16 @@ export const mutations = `
     username: String!
     password: String!
     confirmPassword: String!
-  ): userData
+  ): UserData
 
   login(
     username: String!
     password: String!
-  ): authData
+  ): AuthPayload
+
+  changePassword(
+    oldPassword: String!
+    newPassword: String!
+    confirmNewPassword: String!
+  ): AuthPayload
 `;
