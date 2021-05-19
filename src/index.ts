@@ -16,7 +16,7 @@ import resolvers from 'gql/resolvers';
 import CustomError from 'utils/CustomError';
 
 // env
-import { PORT, MONGO_USER, MONGO_PASS } from 'env_config';
+import { PORT, MONGO_DB, MONGO_USER, MONGO_PASS } from 'env_config';
 
 const app = express();
 
@@ -59,7 +59,7 @@ app.use('/', (req, res) => {
 
 mongoos
   .connect(
-    `mongodb+srv://${MONGO_USER}:${MONGO_PASS}@kharcha.ueuc7.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`,
+    `mongodb+srv://${MONGO_USER}:${MONGO_PASS}@kharcha.ueuc7.mongodb.net/${MONGO_DB}?retryWrites=true&w=majority`,
     {
       useNewUrlParser: true,
       useUnifiedTopology: true
