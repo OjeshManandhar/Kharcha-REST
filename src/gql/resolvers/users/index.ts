@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import User from 'models/user';
 
 // utils
-import CustomError, { ErrorData } from 'utils/CustomError';
+import CustomError, { ErrorData } from 'utils/customError';
 
 // types
 import type * as T from './types';
@@ -80,7 +80,7 @@ export async function createUser(
   }
 }
 
-export function login(args: T.loginArgs): T.loginRet {
+export async function login(args: T.loginArgs): Promise<T.loginRet> {
   const errors: ErrorData = [];
   const { username, password } = args;
 
@@ -100,12 +100,26 @@ export function login(args: T.loginArgs): T.loginRet {
   }
 
   // Actual work
+  try {
+    // Find user
+    const existingUser = await User.findOne({ username: username });
 
-  if (username === 'DeadSkull' && password === 'password') {
-    return {
-      token: username + ' ' + password
-    };
+    if (!existingUser) {
+      throw new CustomError('Incorrect username or password', 401);
+    }
+
+    // Compare password
+    const passwordMatch = await bcrypt.compare(password, existingUser.password);
+
+    if (!passwordMatch) {
+      throw new CustomError('Incorrect username or password', 401);
+    }
+    return { token: 'token' };
+  } catch (err) {
+    if (err instanceof CustomError) {
+      throw err;
+    } else {
+      throw new CustomError('User creation failed');
+    }
   }
-
-  throw new CustomError('Incorrect username and password', 401);
 }

@@ -13,7 +13,7 @@ import schema from 'gql/schemas';
 import resolvers from 'gql/resolvers';
 
 // utils
-import CustomError from 'utils/CustomError';
+import CustomError from 'utils/customError';
 
 // env
 import { PORT, MONGO_DB, MONGO_USER, MONGO_PASS } from 'env_config';
