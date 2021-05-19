@@ -1,3 +1,6 @@
+// packages
+import bcrypt from 'bcryptjs';
+
 // model
 import User from 'models/user';
 
@@ -54,10 +57,13 @@ export async function createUser(
       ]);
     }
 
+    // hash password
+    const hashedPass = await bcrypt.hash(password, 12);
+
     // Create new user
     const newUser = new User({
       username,
-      password
+      password: hashedPass
     });
     const savedUser = await newUser.save();
 
