@@ -17,8 +17,11 @@ export async function createUser(
   const { username, password, confirmPassword } = args;
 
   // Validation
-  if (username.length < 8) {
+  if (username.length < 4) {
     errors.push({ message: 'Username too short', field: 'username' });
+  }
+  if (username.length > 15) {
+    errors.push({ message: 'Username too long', field: 'username' });
   }
   if (password !== confirmPassword) {
     errors.push({
@@ -85,8 +88,11 @@ export async function login(args: T.loginArgs): Promise<T.loginRet> {
   const { username, password } = args;
 
   // validation
-  if (username.length < 8) {
+  if (username.length < 4) {
     errors.push({ message: 'Username too short', field: 'username' });
+  }
+  if (username.length > 15) {
+    errors.push({ message: 'Username too long', field: 'username' });
   }
   if (password.length < 8) {
     errors.push({
