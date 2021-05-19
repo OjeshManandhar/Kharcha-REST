@@ -25,5 +25,5 @@ export const mutations = `
     oldPassword: String!
     newPassword: String!
     confirmNewPassword: String!
-  ): AuthPayload
+  ): Boolean
 `;

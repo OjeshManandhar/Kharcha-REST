@@ -1,5 +1,6 @@
 // packages
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import trim from 'validator/lib/trim';
 import isLength from 'validator/lib/isLength';
 
@@ -8,6 +9,9 @@ import User from 'models/user';
 
 // utils
 import CustomError, { ErrorData } from 'utils/customError';
+
+// env
+import { JWT_SECRET } from 'env_config';
 
 // types
 import type * as T from './types';
@@ -88,7 +92,7 @@ export async function createUser(
   }
 }
 
-export async function login(args: T.LoginArgs): Promise<T.AtuhPayload> {
+export async function login(args: T.LoginArgs): Promise<T.LoginRet> {
   const errors: ErrorData = [];
 
   const username = trim(args.username);
@@ -128,7 +132,15 @@ export async function login(args: T.LoginArgs): Promise<T.AtuhPayload> {
       throw new CustomError('Incorrect username or password', 401);
     }
 
-    return { token: 'token' };
+    if (!JWT_SECRET) {
+      throw null;
+    }
+
+    const token = jwt.sign({ _id: existingUser._id.toString() }, JWT_SECRET, {
+      expiresIn: '1d'
+    });
+
+    return { token };
   } catch (err) {
     if (err instanceof CustomError) {
       throw err;
@@ -140,7 +152,7 @@ export async function login(args: T.LoginArgs): Promise<T.AtuhPayload> {
 
 export async function changePassword(
   args: T.ChangePasswordArgs
-): Promise<T.AtuhPayload> {
+): Promise<T.ChangePasswordRet> {
   const errors: ErrorData = [];
 
   const oldPassword = trim(args.oldPassword);
@@ -206,7 +218,7 @@ export async function changePassword(
     user.password = hashedPass;
     await user.save();
 
-    return { token: 'token' };
+    return true;
   } catch (err) {
     if (err instanceof CustomError) {
       throw err;

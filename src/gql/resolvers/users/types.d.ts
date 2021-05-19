@@ -9,13 +9,13 @@ export type CreateUserRet = {
   username: string;
 };
 
-export type AtuhPayload = {
-  token: string;
-};
-
 export type LoginArgs = {
   username: string;
   password: string;
+};
+
+export type LoginRet = {
+  token: string;
 };
 
 export type ChangePasswordArgs = {
@@ -23,3 +23,5 @@ export type ChangePasswordArgs = {
   newPassword: string;
   confirmNewPassword: string;
 };
+
+export type ChangePasswordRet = boolean;
