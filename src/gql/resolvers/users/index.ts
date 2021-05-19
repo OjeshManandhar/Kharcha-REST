@@ -1,5 +1,7 @@
 // packages
 import bcrypt from 'bcryptjs';
+import trim from 'validator/lib/trim';
+import isLength from 'validator/lib/isLength';
 
 // model
 import User from 'models/user';
@@ -14,14 +16,17 @@ export async function createUser(
   args: T.createUserArgs
 ): Promise<T.createUserRet> {
   const errors: ErrorData = [];
-  const { username, password, confirmPassword } = args;
+
+  const username = trim(args.username);
+  const password = trim(args.password);
+  const confirmPassword = trim(args.confirmPassword);
 
   // Validation
-  if (username.length < 4) {
-    errors.push({ message: 'Username too short', field: 'username' });
-  }
-  if (username.length > 15) {
-    errors.push({ message: 'Username too long', field: 'username' });
+  if (!isLength(username, { min: 4, max: 15 })) {
+    errors.push({
+      message: 'Username must of length 4 to 15 characters',
+      field: 'username'
+    });
   }
   if (password !== confirmPassword) {
     errors.push({
@@ -29,15 +34,15 @@ export async function createUser(
       field: 'confirmPassword'
     });
   }
-  if (password.length < 8) {
+  if (!isLength(password, { min: 8 })) {
     errors.push({
-      message: 'Password too short',
+      message: 'Password must be at least 8 characters',
       field: 'password'
     });
   }
-  if (confirmPassword.length < 8) {
+  if (!isLength(confirmPassword, { min: 8 })) {
     errors.push({
-      message: 'Confirm Password too short',
+      message: 'Confirm Password must be at least 8 characters',
       field: 'confirmPassword'
     });
   }
@@ -85,18 +90,20 @@ export async function createUser(
 
 export async function login(args: T.loginArgs): Promise<T.loginRet> {
   const errors: ErrorData = [];
-  const { username, password } = args;
+
+  const username = trim(args.username);
+  const password = trim(args.password);
 
   // validation
-  if (username.length < 4) {
-    errors.push({ message: 'Username too short', field: 'username' });
-  }
-  if (username.length > 15) {
-    errors.push({ message: 'Username too long', field: 'username' });
-  }
-  if (password.length < 8) {
+  if (!isLength(username, { min: 4, max: 15 })) {
     errors.push({
-      message: 'Password too short',
+      message: 'Username must of length 4 to 15 characters',
+      field: 'username'
+    });
+  }
+  if (!isLength(password, { min: 8 })) {
+    errors.push({
+      message: 'Password must be at least 8 characters',
       field: 'password'
     });
   }
