@@ -2,6 +2,9 @@
 import jwt from 'jsonwebtoken';
 import type { Request, Response, NextFunction } from 'express';
 
+// utils
+import CustomError from 'utils/customError';
+
 // global
 import { Token } from 'global/types';
 
@@ -10,13 +13,18 @@ import { JWT_SECRET } from 'env_config';
 
 export default (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.get('Authorization');
-
   if (!authHeader) {
     req.isAuth = false;
     next();
     return;
   }
+
   const token = authHeader.split(' ')[1];
+  if (!token) {
+    req.isAuth = false;
+    next();
+    return;
+  }
 
   if (!JWT_SECRET) {
     next();
@@ -38,8 +46,10 @@ export default (req: Request, res: Response, next: NextFunction): void => {
       return;
     }
   } catch (err) {
+    console.log('[isAuth] Error in decoding token:', err);
+
     req.isAuth = false;
-    next();
-    return;
+
+    next(new CustomError('An error occured', 500));
   }
 };

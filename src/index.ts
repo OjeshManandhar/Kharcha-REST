@@ -3,7 +3,7 @@
 require('dotenv').config();
 
 // packages
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import mongoos from 'mongoose';
 import bodyParser from 'body-parser';
 import { graphqlHTTP } from 'express-graphql';
@@ -54,6 +54,18 @@ app.use(
       return { message, status, data };
     }
   })
+);
+
+// Error handler
+app.use(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  (error: CustomError, req: Request, res: Response, next: NextFunction) => {
+    const status = error.status || 500;
+    const message = error.message || 'An error occured';
+    const data = error.data || [];
+
+    res.status(status).json({ message: message, status: status, data: data });
+  }
 );
 
 console.log('Connecting to MonogoDB server');
