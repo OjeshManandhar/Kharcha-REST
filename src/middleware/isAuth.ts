@@ -31,25 +31,21 @@ export default (req: Request, res: Response, next: NextFunction): void => {
     return;
   }
 
-  try {
-    const decodedToken: Token = jwt.verify(token, JWT_SECRET) as Token;
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) {
+      req.isAuth = false;
+      next(new CustomError('Token expired', 401));
+    }
 
-    console.log('decoded token:', decodedToken);
+    const decodedToken = decoded as Token;
 
-    if (decodedToken._id) {
+    if (decodedToken && decodedToken._id) {
       req.userId = decodedToken._id;
       req.isAuth = true;
       next();
     } else {
       req.isAuth = false;
       next();
-      return;
     }
-  } catch (err) {
-    console.log('[isAuth] Error in decoding token:', err);
-
-    req.isAuth = false;
-
-    next(new CustomError('An error occured', 500));
-  }
+  });
 };
