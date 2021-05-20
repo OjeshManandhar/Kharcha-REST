@@ -8,6 +8,9 @@ import mongoos from 'mongoose';
 import bodyParser from 'body-parser';
 import { graphqlHTTP } from 'express-graphql';
 
+// Middleware
+import isAuth from 'middleware/isAuth';
+
 // GraphQL
 import schema from 'gql/schemas';
 import resolvers from 'gql/resolvers';
@@ -31,6 +34,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Auth
+app.use(isAuth);
+
 // GraphQL
 app.use(
   '/graphql',
@@ -50,12 +56,7 @@ app.use(
   })
 );
 
-app.use('/', (req, res) => {
-  console.log('req.url:', req.url);
-  console.log('req.body:', req.body);
-
-  res.send('Hello world!');
-});
+console.log('Connecting to MonogoDB server');
 
 mongoos
   .connect(

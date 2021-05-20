@@ -15,10 +15,18 @@ import { JWT_SECRET } from 'env_config';
 
 // types
 import type * as T from './types';
+import { Token } from 'global/types';
+import type { Request } from 'express';
 
 export async function createUser(
-  args: T.CreateUserArgs
+  args: T.CreateUserArgs,
+  req: Request
 ): Promise<T.CreateUserRet> {
+  // Auth
+  if (req.isAuth) {
+    throw new CustomError('Unauthorized. Log out first', 401);
+  }
+
   const errors: ErrorData = [];
 
   const username = trim(args.username);
@@ -92,7 +100,15 @@ export async function createUser(
   }
 }
 
-export async function login(args: T.LoginArgs): Promise<T.LoginRet> {
+export async function login(
+  args: T.LoginArgs,
+  req: Request
+): Promise<T.LoginRet> {
+  // Auth
+  if (req.isAuth) {
+    throw new CustomError('Unauthorized. Log out first', 401);
+  }
+
   const errors: ErrorData = [];
 
   const username = trim(args.username);
@@ -136,7 +152,9 @@ export async function login(args: T.LoginArgs): Promise<T.LoginRet> {
       throw null;
     }
 
-    const token = jwt.sign({ _id: existingUser._id.toString() }, JWT_SECRET, {
+    const tokenObj: Token = { _id: existingUser._id.toString() };
+
+    const token = jwt.sign(tokenObj, JWT_SECRET, {
       expiresIn: '1d'
     });
 
@@ -151,8 +169,14 @@ export async function login(args: T.LoginArgs): Promise<T.LoginRet> {
 }
 
 export async function changePassword(
-  args: T.ChangePasswordArgs
+  args: T.ChangePasswordArgs,
+  req: Request
 ): Promise<T.ChangePasswordRet> {
+  // Auth
+  if (!req.isAuth) {
+    throw new CustomError('Unauthorized. Log in first', 401);
+  }
+
   const errors: ErrorData = [];
 
   const oldPassword = trim(args.oldPassword);
