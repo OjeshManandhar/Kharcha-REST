@@ -25,3 +25,5 @@ export type ChangePasswordArgs = {
 };
 
 export type ChangePasswordRet = boolean;
+
+export type DeleteUserRet = boolean;

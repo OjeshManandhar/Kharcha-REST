@@ -252,3 +252,28 @@ export async function changePassword(
     }
   }
 }
+
+export async function deleteUser(
+  args: unknown,
+  req: Request
+): Promise<T.DeleteUserRet> {
+  // Auth
+  if (!req.isAuth || !req.userId) {
+    throw new CustomError('Unauthorized. Log in first', 401);
+  }
+
+  // Actual work
+  try {
+    await User.deleteOne({
+      _id: mongoose.Types.ObjectId(req.userId)
+    });
+
+    return true;
+  } catch (err) {
+    if (err instanceof CustomError) {
+      throw err;
+    } else {
+      throw new CustomError('Failed to delete user');
+    }
+  }
+}

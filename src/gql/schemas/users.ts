@@ -25,5 +25,7 @@ export const mutations = `
     oldPassword: String!
     newPassword: String!
     confirmNewPassword: String!
-  ): Boolean
+  ): Boolean!
+
+  deleteUser: Boolean!
 `;
