@@ -1,6 +1,7 @@
 // packages
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import trim from 'validator/lib/trim';
 import isLength from 'validator/lib/isLength';
 
@@ -173,7 +174,7 @@ export async function changePassword(
   req: Request
 ): Promise<T.ChangePasswordRet> {
   // Auth
-  if (!req.isAuth) {
+  if (!req.isAuth || !req.userId) {
     throw new CustomError('Unauthorized. Log in first', 401);
   }
 
@@ -222,7 +223,7 @@ export async function changePassword(
   // Actual work
   try {
     // Find user
-    const user = await User.findOne({ username: 'DeadSkull' });
+    const user = await User.findById(mongoose.Types.ObjectId(req.userId));
 
     if (!user) {
       throw new CustomError('User not found', 500);
