@@ -8,11 +8,11 @@ import CustomError from 'utils/customError';
 // global
 import { Token } from 'global/types';
 
-// types
-import type { Request, Response, NextFunction } from 'express';
-
 // env
 import { JWT_SECRET } from 'env_config';
+
+// types
+import type { Request, Response, NextFunction } from 'express';
 
 export default (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.get('Authorization');
@@ -30,7 +30,7 @@ export default (req: Request, res: Response, next: NextFunction): void => {
   }
 
   if (!JWT_SECRET) {
-    next();
+    next(new CustomError('JWT error'));
     return;
   }
 
