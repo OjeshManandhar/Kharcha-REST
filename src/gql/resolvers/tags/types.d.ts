@@ -6,4 +6,4 @@ export type AddTags = (tags: Array<string>) => Array<string>;
 
 export type EditTag = (tag: string) => string;
 
-export type DeleteTag = (tag: string) => string;
+export type DeleteTags = (tags: Array<string>) => Array<string>;

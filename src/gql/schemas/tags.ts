@@ -6,5 +6,5 @@ export const queries = `
 export const mutations = `
   addTags(tags: [String!]!): [String!]!
   editTag(tag: String!): String!
-  deleteTag(tag: String!): String!
+  deleteTags(tags: [String!]!): [String!]!
 `;
