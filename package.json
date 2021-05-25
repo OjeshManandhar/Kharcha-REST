@@ -4,7 +4,7 @@
   "description": "REST API for Kharcha using GraphQL and MongoDB",
   "main": "./src/index.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "start": "NODE_PATH=./src nodemon",
     "prod": "yarn build && NODE_PATH=./dist node ./dist",
     "test": "echo \"Error: no test specified\" && exit 1"
