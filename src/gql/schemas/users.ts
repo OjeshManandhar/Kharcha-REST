@@ -1,6 +1,6 @@
 export const types = `
   type UserData {
-    _id: String!
+    _id: ID!
     username: String!
   }
 
