@@ -76,8 +76,6 @@ export const searchTags: T.SearchTags = async (args, req) => {
       { $group: { _id: '$_id', tags: { $push: '$tags' } } }
     ])) as Array<{ tags: Array<string> }>;
 
-    console.log('found tags:', foundTags);
-
     if (foundTags.length === 0) {
       return [];
     }
@@ -256,7 +254,75 @@ export const editTag: T.EditTag = async (args, req) => {
     if (err instanceof CustomError) {
       throw err;
     } else {
-      throw new CustomError('Failed to edit tags');
+      throw new CustomError('Failed to edit tag');
+    }
+  }
+};
+
+export const deleteTags: T.DeleteTags = async (args, req) => {
+  // Auth
+  if (!req.isAuth || !req.userId) {
+    throw new CustomError('Unauthorized. Log in first', 401);
+  }
+
+  const trimmedTags = args.tags.map(tag => trim(tag));
+
+  // Validation
+  const tags = filterTagsOnLengths(trimmedTags);
+
+  if (tags.length === 0) {
+    throw new CustomError('Invalid Input', 422, [
+      {
+        message: 'No valid tags',
+        field: 'tags'
+      }
+    ]);
+  }
+
+  // Actual work
+  try {
+    // Find user
+    const user = await User.findById(req.userId);
+
+    if (!user) {
+      throw new CustomError('User not found', 401);
+    }
+
+    // Filter out duplicates
+    const removedDuplicates: Array<string> = [];
+    tags.forEach(tag => {
+      if (
+        !removedDuplicates.find(
+          t => t.toLowerCase() === tag.toLocaleLowerCase()
+        )
+      ) {
+        removedDuplicates.push(tag);
+      }
+    });
+
+    // Filter out not existing tags
+    const tagsToDelete = removedDuplicates.filter(tag =>
+      user.tags.includes(tag)
+    );
+
+    if (tagsToDelete.length === 0) return [];
+
+    // Remove tags
+    user.tags = user.tags.filter(tag => !tagsToDelete.find(t => t === tag));
+
+    // Save the doc
+    const savedUser = await user.save();
+
+    if (savedUser !== user) {
+      throw new CustomError('Could not update');
+    }
+
+    return tagsToDelete;
+  } catch (err) {
+    if (err instanceof CustomError) {
+      throw err;
+    } else {
+      throw new CustomError('Failed to delete tags');
     }
   }
 };
