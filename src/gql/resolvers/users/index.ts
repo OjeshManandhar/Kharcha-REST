@@ -1,7 +1,6 @@
 // packages
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import mongoose from 'mongoose';
 import trim from 'validator/lib/trim';
 import isLength from 'validator/lib/isLength';
 
@@ -223,7 +222,7 @@ export async function changePassword(
   // Actual work
   try {
     // Find user
-    const user = await User.findById(mongoose.Types.ObjectId(req.userId));
+    const user = await User.findById(req.userId);
 
     if (!user) {
       throw new CustomError('User not found', 500);
@@ -265,7 +264,7 @@ export async function deleteUser(
   // Actual work
   try {
     await User.deleteOne({
-      _id: mongoose.Types.ObjectId(req.userId)
+      _id: req.userId
     });
 
     return true;

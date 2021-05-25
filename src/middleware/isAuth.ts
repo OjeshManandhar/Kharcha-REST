@@ -1,12 +1,15 @@
 // packages
 import jwt from 'jsonwebtoken';
-import type { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 
 // utils
 import CustomError from 'utils/customError';
 
 // global
 import { Token } from 'global/types';
+
+// types
+import type { Request, Response, NextFunction } from 'express';
 
 // env
 import { JWT_SECRET } from 'env_config';
@@ -40,7 +43,7 @@ export default (req: Request, res: Response, next: NextFunction): void => {
     const decodedToken = decoded as Token;
 
     if (decodedToken && decodedToken._id) {
-      req.userId = decodedToken._id;
+      req.userId = mongoose.Types.ObjectId(decodedToken._id);
       req.isAuth = true;
       next();
     } else {
