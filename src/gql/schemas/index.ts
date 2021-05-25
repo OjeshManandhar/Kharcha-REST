@@ -2,6 +2,7 @@
 import { buildSchema } from 'graphql';
 
 // schemas
+import * as tags from './tags';
 import * as users from './users';
 
 export default buildSchema(`
@@ -9,10 +10,12 @@ export default buildSchema(`
 
   type RootMutation {
     ${users.mutations}
+    ${tags.mutations}
   }
 
   type RootQuery {
     hello: String!
+    ${tags.queries}
   }
 
   schema {
