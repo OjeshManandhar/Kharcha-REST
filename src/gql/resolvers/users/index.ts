@@ -263,9 +263,13 @@ export async function deleteUser(
 
   // Actual work
   try {
-    await User.deleteOne({
+    const deleted = await User.deleteOne({
       _id: req.userId
     });
+
+    if (deleted.deletedCount !== 1) {
+      throw new CustomError('User not found', 500);
+    }
 
     return true;
   } catch (err) {
