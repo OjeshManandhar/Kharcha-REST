@@ -65,9 +65,9 @@ export async function createUser(
     const existingUser = await User.findOne({ username });
 
     if (existingUser) {
-      throw new CustomError('User already exists', 422, [
+      throw new CustomError('User already exists', 401, [
         {
-          message: 'username already in use',
+          message: 'Username already in use',
           field: 'username'
         }
       ]);

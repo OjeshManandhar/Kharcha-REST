@@ -121,8 +121,20 @@ export const addTags: T.AddTags = async (args, req) => {
       throw new CustomError('User not found', 401);
     }
 
+    // Filter out duplicates
+    const removedDuplicates: Array<string> = [];
+    tags.forEach(tag => {
+      if (
+        !removedDuplicates.find(
+          t => t.toLowerCase() === tag.toLocaleLowerCase()
+        )
+      ) {
+        removedDuplicates.push(tag);
+      }
+    });
+
     // Filter out already existing tags
-    const tagsToAdd = tags.filter(
+    const tagsToAdd = removedDuplicates.filter(
       tag => !user.tags.find(t => t.toLowerCase() === tag.toLowerCase())
     );
 
