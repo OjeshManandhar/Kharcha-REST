@@ -222,7 +222,7 @@ export async function changePassword(
     const user = await User.findById(req.userId);
 
     if (!user) {
-      throw new CustomError('User not found', 500);
+      throw new CustomError('User not found', 401);
     }
 
     // Check old password

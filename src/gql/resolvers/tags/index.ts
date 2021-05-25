@@ -5,8 +5,8 @@ import trim from 'validator/lib/trim';
 import User from 'models/user';
 
 // utils
-import { filterTagsOnLengths } from 'utils/validation';
 import CustomError, { ErrorData } from 'utils/customError';
+import { tagIsLength, filterTagsOnLengths } from 'utils/validation';
 
 // types
 import type * as T from './types';
@@ -19,10 +19,11 @@ export const listTags: T.ListTags = async (args, req) => {
 
   // Actual work
   try {
+    // Find user
     const user = await User.findById(req.userId, { tags: 1 });
 
     if (!user) {
-      throw new CustomError('User not found', 500);
+      throw new CustomError('User not found', 401);
     }
 
     return user.tags;
@@ -41,20 +42,16 @@ export const searchTags: T.SearchTags = async (args, req) => {
     throw new CustomError('Unauthorized. Log in first', 401);
   }
 
-  const errors: ErrorData = [];
-
   const tag = trim(args.tag);
 
   // Validation
   if (tag.length === 0) {
-    errors.push({
-      message: 'Empty tag given',
-      field: 'tag'
-    });
-  }
-
-  if (errors.length > 0) {
-    throw new CustomError('Invalid Input', 422, errors);
+    throw new CustomError('Invalid Input', 422, [
+      {
+        message: 'Empty tag given',
+        field: 'tag'
+      }
+    ]);
   }
 
   // Actual work
@@ -63,7 +60,7 @@ export const searchTags: T.SearchTags = async (args, req) => {
     const user = await User.findById(req.userId);
 
     if (!user) {
-      throw new CustomError('User not found', 500);
+      throw new CustomError('User not found', 401);
     }
 
     const regex = new RegExp(tag, 'i');
@@ -107,7 +104,7 @@ export const addTags: T.AddTags = async (args, req) => {
   const tags = filterTagsOnLengths(trimmedTags);
 
   if (tags.length === 0) {
-    throw new CustomError('No valid tags', 422, [
+    throw new CustomError('Invalid Input', 422, [
       {
         message: 'No valid tags',
         field: 'tags'
@@ -117,10 +114,11 @@ export const addTags: T.AddTags = async (args, req) => {
 
   // Actual work
   try {
+    // Find user
     const user = await User.findById(req.userId);
 
     if (!user) {
-      throw new CustomError('User not found', 500);
+      throw new CustomError('User not found', 401);
     }
 
     // Filter out already existing tags
@@ -137,7 +135,7 @@ export const addTags: T.AddTags = async (args, req) => {
     const savedUser = await user.save();
 
     if (savedUser !== user) {
-      throw new CustomError('Could not update', 500);
+      throw new CustomError('Could not update');
     }
 
     return tagsToAdd;
@@ -158,6 +156,95 @@ export const addTags: T.AddTags = async (args, req) => {
       throw err;
     } else {
       throw new CustomError('Failed to add tags');
+    }
+  }
+};
+
+export const editTag: T.EditTag = async (args, req) => {
+  // Auth
+  if (!req.isAuth || !req.userId) {
+    throw new CustomError('Unauthorized. Log in first', 401);
+  }
+
+  const errors: ErrorData = [];
+
+  const oldTag = trim(args.oldTag);
+  const newTag = trim(args.newTag);
+
+  // Validation
+  if (tagIsLength(oldTag)) {
+    errors.push({
+      message: 'Old tag must be of length 3 to 20 characters',
+      field: 'oldTag'
+    });
+  }
+  if (tagIsLength(newTag)) {
+    errors.push({
+      message: 'New tag must be of length 3 to 20 characters',
+      field: 'newTag'
+    });
+  }
+  if (oldTag === newTag) {
+    errors.push({
+      message: "New tag can't be same as Old tag",
+      field: 'newTag'
+    });
+  }
+
+  if (errors.length > 0) {
+    throw new CustomError('Invalid Input', 422, errors);
+  }
+
+  // Actual work
+  try {
+    // Find user
+    const user = await User.findById(req.userId);
+
+    if (!user) {
+      throw new CustomError('User not found', 401);
+    }
+
+    // Check for old tag
+    const tagIndex = user.tags.findIndex(t => t === oldTag);
+
+    if (tagIndex === -1) {
+      throw new CustomError('Invalid Input', 422, [
+        {
+          message: "Old tag doesn't exist",
+          field: 'oldTag'
+        }
+      ]);
+    }
+
+    // Check if new tag already exits
+    // Will not
+    const newTagExists = user.tags.find(
+      t => t !== oldTag && t.toLowerCase() === newTag.toLowerCase()
+    );
+
+    if (newTagExists) {
+      throw new CustomError('Invalid Input', 422, [
+        {
+          message: 'New tag already exist',
+          field: 'newTag'
+        }
+      ]);
+    }
+
+    user.tags.splice(tagIndex, 1, newTag);
+
+    const savedUser = await user.save();
+
+    if (savedUser !== user) {
+      throw new CustomError('Could not update');
+    }
+
+    return newTag;
+  } catch (err) {
+    if (err instanceof CustomError) {
+      throw err;
+    } else {
+      throw new CustomError('Failed to edit tags');
     }
   }
 };

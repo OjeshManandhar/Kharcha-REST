@@ -13,7 +13,10 @@ export type AddTags = (
   req: Request
 ) => Promist<Array<string>>;
 
-export type EditTag = (args: { tag: string }, req: Request) => Promise<string>;
+export type EditTag = (
+  args: { oldTag: string; newTag: string },
+  req: Request
+) => Promise<string>;
 
 export type DeleteTags = (
   args: { tags: Array<string> },
