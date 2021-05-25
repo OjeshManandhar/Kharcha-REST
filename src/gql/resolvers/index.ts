@@ -1,4 +1,5 @@
 // resolvers
+import * as tags from './tags';
 import * as users from './users';
 
 function hello(): string {
@@ -7,7 +8,8 @@ function hello(): string {
 
 const rootResolver = {
   hello,
-  ...users
+  ...users,
+  ...tags
 };
 
 export default rootResolver;
