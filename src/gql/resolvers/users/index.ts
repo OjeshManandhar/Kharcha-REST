@@ -1,21 +1,17 @@
 // packages
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import trim from 'validator/lib/trim';
 
 // model
 import User from 'models/user';
 
 // utils
+import { encodeIdToJwt } from 'utils/token';
 import CustomError, { ErrorData } from 'utils/customError';
 import { passwordIsLength, usernameIsLength } from 'utils/validation';
 
-// env
-import { JWT_SECRET } from 'env_config';
-
 // types
 import type * as T from './types';
-import { Token } from 'global/types';
 import type { Request } from 'express';
 
 export async function createUser(
@@ -87,17 +83,8 @@ export async function createUser(
     });
     const savedUser = await newUser.save();
 
-    console.log('savedUser:', savedUser);
-
-    if (!JWT_SECRET) {
-      throw null;
-    }
-
-    const tokenObj: Token = { _id: savedUser._id.toString() };
-
-    const token = jwt.sign(tokenObj, JWT_SECRET, {
-      expiresIn: '1d'
-    });
+    // Make JWT
+    const token = encodeIdToJwt(savedUser._id.toString());
 
     return {
       _id: savedUser._id.toString(),
@@ -161,15 +148,8 @@ export async function login(
       throw new CustomError('Incorrect username or password', 401);
     }
 
-    if (!JWT_SECRET) {
-      throw null;
-    }
-
-    const tokenObj: Token = { _id: existingUser._id.toString() };
-
-    const token = jwt.sign(tokenObj, JWT_SECRET, {
-      expiresIn: '1d'
-    });
+    // Make JWT
+    const token = encodeIdToJwt(existingUser._id.toString());
 
     return { token };
   } catch (err) {
