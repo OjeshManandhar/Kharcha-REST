@@ -10,3 +10,7 @@ export const passwordIsLength: T.PasswordISLength = password =>
 
 export const usernameIsLength: T.UsernameISLength = username =>
   !isLength(username, { min: 4, max: 15 });
+
+// Tags
+export const filterTagsOnLengths: T.FilterTagsOnLengths = tags =>
+  tags.filter(tag => isLength(tag, { min: 3, max: 20 }));
