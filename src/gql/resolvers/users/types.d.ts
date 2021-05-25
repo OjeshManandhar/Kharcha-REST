@@ -7,6 +7,7 @@ export type CreateUserArgs = {
 export type CreateUserRet = {
   _id: string;
   username: string;
+  token: string;
 };
 
 export type LoginArgs = {

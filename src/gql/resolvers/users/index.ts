@@ -87,9 +87,22 @@ export async function createUser(
     });
     const savedUser = await newUser.save();
 
+    console.log('savedUser:', savedUser);
+
+    if (!JWT_SECRET) {
+      throw null;
+    }
+
+    const tokenObj: Token = { _id: savedUser._id.toString() };
+
+    const token = jwt.sign(tokenObj, JWT_SECRET, {
+      expiresIn: '1d'
+    });
+
     return {
       _id: savedUser._id.toString(),
-      username: savedUser.username
+      username: savedUser.username,
+      token
     };
   } catch (err) {
     if (err instanceof CustomError) {

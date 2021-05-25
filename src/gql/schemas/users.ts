@@ -1,7 +1,8 @@
 export const types = `
-  type UserData {
+  type NewUserData {
     _id: ID!
     username: String!
+    token: String!
   }
 
   type AuthPayload {
@@ -14,7 +15,7 @@ export const mutations = `
     username: String!
     password: String!
     confirmPassword: String!
-  ): UserData
+  ): NewUserData
 
   login(
     username: String!
