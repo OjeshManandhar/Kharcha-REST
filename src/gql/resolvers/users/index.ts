@@ -2,13 +2,13 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import trim from 'validator/lib/trim';
-import isLength from 'validator/lib/isLength';
 
 // model
 import User from 'models/user';
 
 // utils
 import CustomError, { ErrorData } from 'utils/customError';
+import { passwordIsLength, usernameIsLength } from 'utils/validation';
 
 // env
 import { JWT_SECRET } from 'env_config';
@@ -34,7 +34,7 @@ export async function createUser(
   const confirmPassword = trim(args.confirmPassword);
 
   // Validation
-  if (!isLength(username, { min: 4, max: 15 })) {
+  if (usernameIsLength(username)) {
     errors.push({
       message: 'Username must of length 4 to 15 characters',
       field: 'username'
@@ -46,13 +46,13 @@ export async function createUser(
       field: 'confirmPassword'
     });
   }
-  if (!isLength(password, { min: 8 })) {
+  if (passwordIsLength(password)) {
     errors.push({
       message: 'Password must be at least 8 characters',
       field: 'password'
     });
   }
-  if (!isLength(confirmPassword, { min: 8 })) {
+  if (passwordIsLength(confirmPassword)) {
     errors.push({
       message: 'Confirm Password must be at least 8 characters',
       field: 'confirmPassword'
@@ -115,13 +115,13 @@ export async function login(
   const password = trim(args.password);
 
   // Validation
-  if (!isLength(username, { min: 4, max: 15 })) {
+  if (usernameIsLength(username)) {
     errors.push({
       message: 'Username must of length 4 to 15 characters',
       field: 'username'
     });
   }
-  if (!isLength(password, { min: 8 })) {
+  if (passwordIsLength(password)) {
     errors.push({
       message: 'Password must be at least 8 characters',
       field: 'password'
@@ -184,7 +184,7 @@ export async function changePassword(
   const confirmNewPassword = trim(args.confirmNewPassword);
 
   // Validation
-  if (!isLength(oldPassword, { min: 8 })) {
+  if (passwordIsLength(oldPassword)) {
     errors.push({
       message: 'Old Password must be at least 8 characters',
       field: 'oldPassword'
@@ -202,13 +202,13 @@ export async function changePassword(
       field: 'confirmNewPassword'
     });
   }
-  if (!isLength(newPassword, { min: 8 })) {
+  if (passwordIsLength(newPassword)) {
     errors.push({
       message: 'New Password must be at least 8 characters',
       field: 'newPassword'
     });
   }
-  if (!isLength(confirmNewPassword, { min: 8 })) {
+  if (passwordIsLength(confirmNewPassword)) {
     errors.push({
       message: 'Confirm New Password must be at least 8 characters',
       field: 'confirmNewPassword'
