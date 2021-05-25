@@ -83,6 +83,10 @@ export async function createUser(
     });
     const savedUser = await newUser.save();
 
+    if (savedUser !== newUser) {
+      throw new CustomError('Could not create', 500);
+    }
+
     // Make JWT
     const token = encodeIdToJwt(savedUser._id.toString());
 
