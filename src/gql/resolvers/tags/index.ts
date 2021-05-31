@@ -5,6 +5,7 @@ import trim from 'validator/lib/trim';
 import User from 'models/user';
 
 // utils
+import commonErrorHandler from 'utils/commonErrorHandler';
 import CustomError, { ErrorData } from 'utils/customError';
 import { tagIsLength, filterTagsOnLength } from 'utils/validation';
 
@@ -28,11 +29,7 @@ export const listTags: T.ListTags = async (args, req) => {
 
     return user.tags;
   } catch (err) {
-    if (err instanceof CustomError) {
-      throw err;
-    } else {
-      throw new CustomError('Failed to list tags');
-    }
+    commonErrorHandler(err, 'Failed to list tags');
   }
 };
 
@@ -82,11 +79,7 @@ export const searchTags: T.SearchTags = async (args, req) => {
     return foundTags[0].tags;
     */
   } catch (err) {
-    if (err instanceof CustomError) {
-      throw err;
-    } else {
-      throw new CustomError('Failed to search tags');
-    }
+    commonErrorHandler(err, 'Failed to search tags');
   }
 };
 
@@ -162,11 +155,7 @@ export const addTags: T.AddTags = async (args, req) => {
     //   }
     // );
   } catch (err) {
-    if (err instanceof CustomError) {
-      throw err;
-    } else {
-      throw new CustomError('Failed to add tags');
-    }
+    commonErrorHandler(err, 'Failed to add tags');
   }
 };
 
@@ -251,11 +240,7 @@ export const editTag: T.EditTag = async (args, req) => {
 
     return newTag;
   } catch (err) {
-    if (err instanceof CustomError) {
-      throw err;
-    } else {
-      throw new CustomError('Failed to edit tag');
-    }
+    commonErrorHandler(err, 'Failed to edit tag');
   }
 };
 
@@ -319,10 +304,6 @@ export const deleteTags: T.DeleteTags = async (args, req) => {
 
     return tagsToDelete;
   } catch (err) {
-    if (err instanceof CustomError) {
-      throw err;
-    } else {
-      throw new CustomError('Failed to delete tags');
-    }
+    commonErrorHandler(err, 'Failed to delete tags');
   }
 };

@@ -4,20 +4,24 @@ export type CreateUserArgs = {
   confirmPassword: string;
 };
 
-export type CreateUserRet = {
-  _id: string;
-  username: string;
-  token: string;
-};
+export type CreateUserRet =
+  | undefined
+  | {
+      _id: string;
+      username: string;
+      token: string;
+    };
 
 export type LoginArgs = {
   username: string;
   password: string;
 };
 
-export type LoginRet = {
-  token: string;
-};
+export type LoginRet =
+  | undefined
+  | {
+      token: string;
+    };
 
 export type ChangePasswordArgs = {
   oldPassword: string;
@@ -25,6 +29,6 @@ export type ChangePasswordArgs = {
   confirmNewPassword: string;
 };
 
-export type ChangePasswordRet = boolean;
+export type ChangePasswordRet = undefined | boolean;
 
-export type DeleteUserRet = boolean;
+export type DeleteUserRet = undefined | boolean;

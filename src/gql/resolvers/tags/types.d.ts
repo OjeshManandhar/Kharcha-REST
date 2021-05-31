@@ -16,7 +16,7 @@ export type AddTags = (
 export type EditTag = (
   args: { oldTag: string; newTag: string },
   req: Request
-) => Promise<string>;
+) => Promise<string | undefined>;
 
 export type DeleteTags = (
   args: { tags: Array<string> },

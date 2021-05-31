@@ -7,6 +7,7 @@ import User from 'models/user';
 
 // utils
 import { encodeIdToJwt } from 'utils/token';
+import commonErrorHandler from 'utils/commonErrorHandler';
 import CustomError, { ErrorData } from 'utils/customError';
 import { passwordIsLength, usernameIsLength } from 'utils/validation';
 
@@ -96,11 +97,7 @@ export async function createUser(
       token
     };
   } catch (err) {
-    if (err instanceof CustomError) {
-      throw err;
-    } else {
-      throw new CustomError('User creation failed');
-    }
+    commonErrorHandler(err, 'User creation failed');
   }
 }
 
@@ -157,11 +154,7 @@ export async function login(
 
     return { token };
   } catch (err) {
-    if (err instanceof CustomError) {
-      throw err;
-    } else {
-      throw new CustomError('Log in failed');
-    }
+    commonErrorHandler(err, 'Log in failed');
   }
 }
 
@@ -241,11 +234,7 @@ export async function changePassword(
 
     return true;
   } catch (err) {
-    if (err instanceof CustomError) {
-      throw err;
-    } else {
-      throw new CustomError('Failed to change password');
-    }
+    commonErrorHandler(err, 'Failed to change password');
   }
 }
 
@@ -270,10 +259,6 @@ export async function deleteUser(
 
     return true;
   } catch (err) {
-    if (err instanceof CustomError) {
-      throw err;
-    } else {
-      throw new CustomError('Failed to delete user');
-    }
+    commonErrorHandler(err, 'Failed to delete user');
   }
 }
