@@ -4,4 +4,4 @@ export type UsernameISLength = (username: string) => boolean;
 
 // Tag
 export type TagIsLength = (tag: string) => boolean;
-export type FilterTagsOnLengths = (tags: Array<string>) => Array<string>;
+export type FilterTagsOnLength = (tags: Array<string>) => Array<string>;

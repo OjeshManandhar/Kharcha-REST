@@ -6,7 +6,7 @@ import User from 'models/user';
 
 // utils
 import CustomError, { ErrorData } from 'utils/customError';
-import { tagIsLength, filterTagsOnLengths } from 'utils/validation';
+import { tagIsLength, filterTagsOnLength } from 'utils/validation';
 
 // types
 import type * as T from './types';
@@ -99,7 +99,7 @@ export const addTags: T.AddTags = async (args, req) => {
   const trimmedTags = args.tags.map(tag => trim(tag));
 
   // Validation
-  const tags = filterTagsOnLengths(trimmedTags);
+  const tags = filterTagsOnLength(trimmedTags);
 
   if (tags.length === 0) {
     throw new CustomError('Invalid Input', 422, [
@@ -268,7 +268,7 @@ export const deleteTags: T.DeleteTags = async (args, req) => {
   const trimmedTags = args.tags.map(tag => trim(tag));
 
   // Validation
-  const tags = filterTagsOnLengths(trimmedTags);
+  const tags = filterTagsOnLength(trimmedTags);
 
   if (tags.length === 0) {
     throw new CustomError('Invalid Input', 422, [
