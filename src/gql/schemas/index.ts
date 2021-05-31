@@ -14,7 +14,6 @@ export default buildSchema(`
   }
 
   type RootQuery {
-    hello: String!
     ${tags.queries}
   }
 
