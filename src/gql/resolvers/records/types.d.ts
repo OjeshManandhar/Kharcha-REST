@@ -2,7 +2,7 @@
 import type { Request } from 'express';
 
 // enum
-import { RecordType, TypeCriteria, FilterCriteria } from './enum';
+import { RecordType, TypeCriteria, FilterCriteria } from 'global/enum';
 
 export type Record = {
   _id: string;

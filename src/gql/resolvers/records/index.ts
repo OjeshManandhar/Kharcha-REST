@@ -1,12 +1,12 @@
 // model
 import User from 'models/user';
 
+// global
+import { RecordType } from 'global/enum';
+
 // utils
 import CustomError from 'utils/customError';
 import commonErrorHandler from 'utils/commonErrorHandler';
-
-// enum
-import { RecordType } from './enum';
 
 // types
 import type * as T from './types';
