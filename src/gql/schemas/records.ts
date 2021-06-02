@@ -17,6 +17,7 @@ export const types = `
 
   type Record {
     _id: ID!
+    userId: ID!
     date: Date!
     amount: Float!
     type: RecordType!

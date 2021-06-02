@@ -6,6 +6,7 @@ import { RecordType, TypeCriteria, FilterCriteria } from './enum';
 
 export type Record = {
   _id: string;
+  userId: string;
   date: string | Date;
   amount: number;
   type: RecordType;

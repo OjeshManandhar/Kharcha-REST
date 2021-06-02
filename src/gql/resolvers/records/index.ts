@@ -18,7 +18,8 @@ export const listRecords: T.ListRecords = async (args, req) => {
   }
 
   const dummy: T.Record = {
-    _id: 'justAnId',
+    _id: 'recordId',
+    userId: 'userId',
     date: new Date(),
     amount: 123.45,
     type: RecordType.DEBIT,
