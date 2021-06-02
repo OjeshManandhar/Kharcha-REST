@@ -1,5 +1,5 @@
 export const types = `
-  enum Type {
+  enum RecordType {
     DEBIT
     CREDIT
   }
@@ -19,7 +19,7 @@ export const types = `
     _id: ID!
     date: Date!
     amount: Float!
-    type: Type!
+    type: RecordType!
     tags: [String!]!
     description: String!
   }
@@ -28,7 +28,7 @@ export const types = `
     _id: ID
     date: Date!
     amount: Float!
-    type: Type!
+    type: RecordType!
     tags: [String!]!
     description: String!
   }
