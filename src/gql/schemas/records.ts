@@ -24,7 +24,8 @@ export const types = `
     description: String!
   }
 
-  type RecordInput {
+  input RecordInput {
+    _id: ID
     date: Date!
     amount: Float!
     type: Type!
@@ -32,7 +33,7 @@ export const types = `
     description: String!
   }
 
-  type RecordFilter {
+  input RecordFilter {
     idStart: ID
     idEnd: ID
     dateStart: Date
@@ -54,7 +55,7 @@ export const queries = `
 export const mutations = `
   createRecord(record: RecordInput!): Record!
 
-  editRecord(record: Record!): Record!
+  editRecord(record: RecordInput!): Record!
 
   filterRecords(criteria: RecordFilter!): [Record!]!
 
