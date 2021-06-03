@@ -6,8 +6,9 @@ import User from 'models/user';
 import { RecordType } from 'global/enum';
 
 // utils
-import CustomError from 'utils/customError';
+import { validateRecordInput } from 'utils/validation';
 import commonErrorHandler from 'utils/commonErrorHandler';
+import CustomError, { ErrorData } from 'utils/customError';
 
 // types
 import type * as T from './types';
@@ -18,7 +19,16 @@ export const createRecord: T.CreateRecord = async (args, req) => {
     throw new CustomError('Unauthorized. Log in first', 401);
   }
 
+  const errors: ErrorData = [];
+
   const record = args.record;
+
+  // Validation
+  validateRecordInput(record, errors);
+
+  if (errors.length > 0) {
+    throw new CustomError('Invalid Input', 422, errors);
+  }
 
   const dummy: T.Record = {
     ...record,
@@ -26,8 +36,7 @@ export const createRecord: T.CreateRecord = async (args, req) => {
     userId: req.userId.toString()
   };
 
-  console.log('dummy:', dummy);
-
+  // Actual work
   try {
     return dummy;
   } catch (err) {
