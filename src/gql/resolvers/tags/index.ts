@@ -7,10 +7,72 @@ import User from 'models/user';
 // utils
 import commonErrorHandler from 'utils/commonErrorHandler';
 import CustomError, { ErrorData } from 'utils/customError';
-import { tagIsLength, filterTagsOnLength } from 'utils/validation';
+import { tagIsLength, filterUniqueValidTags } from 'utils/validation';
 
 // types
 import type * as T from './types';
+
+export const addTags: T.AddTags = async (args, req) => {
+  // Auth
+  if (!req.isAuth || !req.userId) {
+    throw new CustomError('Unauthorized. Log in first', 401);
+  }
+
+  // Validation
+  const tags = filterUniqueValidTags(args.tags);
+
+  if (tags.length === 0) {
+    throw new CustomError('Invalid Input', 422, [
+      {
+        message: 'No valid tags',
+        field: 'tags'
+      }
+    ]);
+  }
+
+  // Actual work
+  try {
+    // Find user
+    const user = await User.findById(req.userId);
+
+    if (!user) {
+      throw new CustomError('User not found', 401);
+    }
+
+    // Filter out already existing tags
+    const tagsToAdd = tags.filter(
+      tag => !user.tags.find(t => t.toLowerCase() === tag.toLowerCase())
+    );
+
+    if (tagsToAdd.length === 0) return [];
+
+    // Add new tags
+    user.tags.push(...tagsToAdd);
+
+    // Save the doc
+    const savedUser = await user.save();
+
+    if (savedUser !== user) {
+      throw new CustomError('Could not update');
+    }
+
+    return tagsToAdd;
+
+    // Will work but wont be able to return the saved tags
+    // await User.updateOne(
+    //   { _id: req.userId },
+    //   {
+    //     $addToSet: {
+    //       tags: {
+    //         $each: tags
+    //       }
+    //     }
+    //   }
+    // );
+  } catch (err) {
+    commonErrorHandler(err, 'Failed to add tags');
+  }
+};
 
 export const listTags: T.ListTags = async (args, req) => {
   // Auth
@@ -80,82 +142,6 @@ export const searchTags: T.SearchTags = async (args, req) => {
     */
   } catch (err) {
     commonErrorHandler(err, 'Failed to search tags');
-  }
-};
-
-export const addTags: T.AddTags = async (args, req) => {
-  // Auth
-  if (!req.isAuth || !req.userId) {
-    throw new CustomError('Unauthorized. Log in first', 401);
-  }
-
-  const trimmedTags = args.tags.map(tag => trim(tag));
-
-  // Validation
-  const tags = filterTagsOnLength(trimmedTags);
-
-  if (tags.length === 0) {
-    throw new CustomError('Invalid Input', 422, [
-      {
-        message: 'No valid tags',
-        field: 'tags'
-      }
-    ]);
-  }
-
-  // Actual work
-  try {
-    // Find user
-    const user = await User.findById(req.userId);
-
-    if (!user) {
-      throw new CustomError('User not found', 401);
-    }
-
-    // Filter out duplicates
-    const removedDuplicates: Array<string> = [];
-    tags.forEach(tag => {
-      if (
-        !removedDuplicates.find(
-          t => t.toLowerCase() === tag.toLocaleLowerCase()
-        )
-      ) {
-        removedDuplicates.push(tag);
-      }
-    });
-
-    // Filter out already existing tags
-    const tagsToAdd = removedDuplicates.filter(
-      tag => !user.tags.find(t => t.toLowerCase() === tag.toLowerCase())
-    );
-
-    if (tagsToAdd.length === 0) return [];
-
-    // Add new tags
-    user.tags.push(...tagsToAdd);
-
-    // Save the doc
-    const savedUser = await user.save();
-
-    if (savedUser !== user) {
-      throw new CustomError('Could not update');
-    }
-
-    return tagsToAdd;
-
-    // Will work but wont be able to return the saved tags
-    // await User.updateOne(
-    //   { _id: req.userId },
-    //   {
-    //     $addToSet: {
-    //       tags: {
-    //         $each: tags
-    //       }
-    //     }
-    //   }
-    // );
-  } catch (err) {
-    commonErrorHandler(err, 'Failed to add tags');
   }
 };
 
@@ -250,10 +236,8 @@ export const deleteTags: T.DeleteTags = async (args, req) => {
     throw new CustomError('Unauthorized. Log in first', 401);
   }
 
-  const trimmedTags = args.tags.map(tag => trim(tag));
-
   // Validation
-  const tags = filterTagsOnLength(trimmedTags);
+  const tags = filterUniqueValidTags(args.tags);
 
   if (tags.length === 0) {
     throw new CustomError('Invalid Input', 422, [
@@ -273,22 +257,8 @@ export const deleteTags: T.DeleteTags = async (args, req) => {
       throw new CustomError('User not found', 401);
     }
 
-    // Filter out duplicates
-    const removedDuplicates: Array<string> = [];
-    tags.forEach(tag => {
-      if (
-        !removedDuplicates.find(
-          t => t.toLowerCase() === tag.toLocaleLowerCase()
-        )
-      ) {
-        removedDuplicates.push(tag);
-      }
-    });
-
     // Filter out not existing tags
-    const tagsToDelete = removedDuplicates.filter(tag =>
-      user.tags.includes(tag)
-    );
+    const tagsToDelete = tags.filter(tag => user.tags.includes(tag));
 
     if (tagsToDelete.length === 0) return [];
 
