@@ -1,12 +1,15 @@
 // packages
 import { buildSchema } from 'graphql';
 
+// scalars
+import DateType from 'gql/scalars/date';
+
 // schemas
 import * as tags from './tags';
 import * as users from './users';
 import * as records from './records';
 
-export default buildSchema(`
+const schema = buildSchema(`
   scalar Date
 
   ${users.types}
@@ -28,3 +31,7 @@ export default buildSchema(`
     mutation: RootMutation
   }
 `);
+
+Object.assign((schema as any)._typeMap.Date, DateType);
+
+export default schema;
