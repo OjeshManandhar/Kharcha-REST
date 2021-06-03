@@ -1,12 +1,12 @@
 // packages
-import mongoose, { Schema, model } from 'mongoose';
+import { model, Types, Schema } from 'mongoose';
 
 // types
 import type { IRecord } from './types';
 
 const schema = new Schema<IRecord>({
   userId: {
-    type: mongoose.Types.ObjectId,
+    type: Types.ObjectId,
     required: true
   },
   date: {
