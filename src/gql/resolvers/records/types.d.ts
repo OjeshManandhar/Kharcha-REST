@@ -7,7 +7,7 @@ import { RecordType, TypeCriteria, FilterCriteria } from 'global/enum';
 export type Record = {
   _id: string;
   userId: string;
-  date: string | Date;
+  date: Date;
   amount: number;
   type: RecordType;
   tags: Arrray<string>;
@@ -16,7 +16,7 @@ export type Record = {
 
 export type RecordInput = {
   _id: ?string;
-  date: string | Date;
+  date: Date;
   amount: number;
   type: RecordType;
   tags: Arrray<string>;
@@ -26,8 +26,8 @@ export type RecordInput = {
 export type RecordFilter = {
   idStart: string;
   idEnd: string;
-  dateStart: string | Date;
-  dateEnd: string | Date;
+  dateStart: Date;
+  dateEnd: Date;
   amountStart: number;
   amountEnd: number;
   type: TypeCriteria;
@@ -38,7 +38,7 @@ export type RecordFilter = {
 };
 
 export type CreateRecord = (
-  args: RecordInput,
+  args: { record: RecordInput },
   req: Request
 ) => Promise<Record | undefined>;
 
@@ -48,12 +48,12 @@ export type ListRecords = (
 ) => Promise<Array<Record> | undefined>;
 
 export type EditRecord = (
-  args: RecordInput,
+  args: { record: RecordInput },
   req: Request
 ) => Promise<Record | undefined>;
 
 export type FilterRecords = (
-  args: RecordFilter,
+  args: { criteria: RecordFilter },
   req: Request
 ) => Promise<Array<Record>>;
 
