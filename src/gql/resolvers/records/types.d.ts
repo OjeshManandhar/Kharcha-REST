@@ -1,8 +1,11 @@
 // packages
 import type { Request } from 'express';
 
-// enum
+// global
+import type { RecordInput, RecordFilter } from 'global/types';
 import { RecordType, TypeCriteria, FilterCriteria } from 'global/enum';
+
+export type { RecordInput, RecordFilter };
 
 export type Record = {
   _id: string;
@@ -12,29 +15,6 @@ export type Record = {
   type: RecordType;
   tags: Arrray<string>;
   description: string;
-};
-
-export type RecordInput = {
-  _id: ?string;
-  date: Date;
-  amount: number;
-  type: RecordType;
-  tags: Arrray<string>;
-  description: string;
-};
-
-export type RecordFilter = {
-  idStart: string;
-  idEnd: string;
-  dateStart: Date;
-  dateEnd: Date;
-  amountStart: number;
-  amountEnd: number;
-  type: TypeCriteria;
-  tagsType: FilterCriteria;
-  tags: Array<string>;
-  description: string;
-  criteria: FilterCriteria;
 };
 
 export type CreateRecord = (
