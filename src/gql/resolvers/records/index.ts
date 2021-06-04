@@ -27,7 +27,7 @@ export const createRecord: T.CreateRecord = async (args, req) => {
   const record = { ...args.record };
 
   // Validation
-  validateRecordInput(record, errors);
+  errors.push(...validateRecordInput(record));
 
   if (errors.length > 0) {
     throw new CustomError('Invalid Input', 422, errors);

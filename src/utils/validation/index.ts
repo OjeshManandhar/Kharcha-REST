@@ -46,8 +46,10 @@ export const filterUniqueValidTags: T.FilterUniqueValidTags = tags => {
 };
 
 // Records
-export const validateRecordInput: T.ValidateRecordInput = (record, errors) => {
+export const validateRecordInput: T.ValidateRecordInput = record => {
   const { date, amount, type } = record;
+
+  const errors: T.ErrorData = [];
 
   if (!isBefore(date.toISOString())) {
     errors.push({
@@ -67,4 +69,6 @@ export const validateRecordInput: T.ValidateRecordInput = (record, errors) => {
       field: 'type'
     });
   }
+
+  return errors;
 };
