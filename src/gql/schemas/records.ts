@@ -51,14 +51,14 @@ export const types = `
 
 export const queries = `
   listRecords: [Record!]!
+
+  filterRecords(criteria: RecordFilter!): [Record!]!
 `;
 
 export const mutations = `
   createRecord(record: RecordInput!): Record!
 
   editRecord(record: RecordInput!): Record!
-
-  filterRecords(criteria: RecordFilter!): [Record!]!
 
   deleteRecord(_id: ID!): Record!
 `;
