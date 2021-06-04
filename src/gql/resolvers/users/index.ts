@@ -230,7 +230,11 @@ export async function changePassword(
 
     // Save new password
     user.password = hashedPass;
-    await user.save();
+    const savedUser = await user.save();
+
+    if (savedUser !== user) {
+      throw new CustomError('Could not change password', 500);
+    }
 
     return true;
   } catch (err) {
