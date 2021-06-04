@@ -8,7 +8,8 @@ const commonErrorHandler: CommonErrorHandler = (err, msg) => {
   if (err instanceof CustomError) {
     throw err;
   } else {
-    throw new CustomError(msg);
+    console.log('Error:', err);
+    throw new CustomError(msg, 500, [{ message: err.message }]);
   }
 };
 
