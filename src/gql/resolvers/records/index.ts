@@ -114,14 +114,9 @@ export const editRecord: T.EditRecord = async (args, req) => {
   };
 
   // Validation
-  if (!record._id) {
+  if (!record._id || !trim(record._id)) {
     errors.push({
-      message: '_id is required',
-      field: '_id'
-    });
-  } else if (record._id.length === 0) {
-    errors.push({
-      message: '_id cannot be blank',
+      message: '_id is required and cannot be blank',
       field: '_id'
     });
   }
@@ -175,5 +170,70 @@ export const editRecord: T.EditRecord = async (args, req) => {
     };
   } catch (err) {
     commonErrorHandler(err, 'Failed to edit record');
+  }
+};
+
+export const deleteRecord: T.DeleteRecord = async (args, req) => {
+  // Auth
+  if (!req.isAuth || !req.userId) {
+    throw new CustomError('Unauthorized. Log in first', 401);
+  }
+
+  const errors: ErrorData = [];
+
+  const _id = trim(args._id);
+
+  // Validation
+  if (!_id) {
+    errors.push({
+      message: '_id is required and cannot be blank',
+      field: '_id'
+    });
+  }
+
+  if (errors.length > 0) {
+    throw new CustomError('Invalid Input', 422, errors);
+  }
+
+  // Actual work
+  try {
+    // Find user
+    const user = await User.findById(req.userId);
+
+    if (!user) {
+      throw new CustomError('User not found', 401);
+    }
+
+    // Find existing record
+    const existingRecord = await Record.findById(_id);
+
+    if (!existingRecord) {
+      throw new CustomError('Record not found', 422, [
+        {
+          message: 'Invalid _id',
+          field: '_id'
+        }
+      ]);
+    }
+
+    // Check userId
+    if (existingRecord.userId.toString() !== req.userId.toString()) {
+      throw new CustomError('Unauthorized', 401);
+    }
+
+    // Delete record
+    const deleted = await Record.deleteOne({ _id });
+
+    if (deleted.deletedCount !== 1) {
+      throw new CustomError('Could not delete record', 500);
+    }
+
+    return {
+      ...existingRecord.toJSON(),
+      _id: existingRecord._id.toString(),
+      userId: existingRecord.userId.toString()
+    };
+  } catch (err) {
+    commonErrorHandler(err, 'Failed to delete record');
   }
 };
