@@ -46,7 +46,7 @@ export const createRecord: T.CreateRecord = async (args, req) => {
     const newRecord = new Record({
       ...args.record,
       // Add userId
-      // userId: req.userId.toString(),
+      userId: req.userId.toString(),
       // Filter out existing tags
       tags: record.tags.filter((tag: string) =>
         user.tags.find(t => t.toLowerCase() === tag.toLowerCase())
