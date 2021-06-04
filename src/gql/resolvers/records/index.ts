@@ -1,6 +1,9 @@
+// packages
+import trim from 'validator/lib/trim';
+
 // model
 import User from 'models/user';
-// import Record from 'models/record';
+import Record from 'models/record';
 
 // global
 import { RecordType } from 'global/enum';
@@ -21,7 +24,7 @@ export const createRecord: T.CreateRecord = async (args, req) => {
 
   const errors: ErrorData = [];
 
-  const record = args.record;
+  const record = { ...args.record };
 
   // Validation
   validateRecordInput(record, errors);
@@ -30,15 +33,37 @@ export const createRecord: T.CreateRecord = async (args, req) => {
     throw new CustomError('Invalid Input', 422, errors);
   }
 
-  const dummy: T.Record = {
-    ...record,
-    _id: 'recordId',
-    userId: req.userId.toString()
-  };
-
   // Actual work
   try {
-    return dummy;
+    // Find user
+    const user = await User.findById(req.userId);
+
+    if (!user) {
+      throw new CustomError('User not found', 401);
+    }
+
+    // Create new record
+    const newRecord = new Record({
+      ...args.record,
+      // Add userId
+      // userId: req.userId.toString(),
+      // Filter out existing tags
+      tags: record.tags.filter((tag: string) =>
+        user.tags.find(t => t.toLowerCase() === tag.toLowerCase())
+      ),
+      description: trim(record.description)
+    });
+    const savedRecord = await newRecord.save();
+
+    if (savedRecord !== newRecord) {
+      throw new CustomError('Could not create', 500);
+    }
+
+    return {
+      ...savedRecord.toJSON(),
+      _id: savedRecord._id.toString(),
+      userId: savedRecord.userId.toString()
+    };
   } catch (err) {
     commonErrorHandler(err, 'Failed to create record');
   }
