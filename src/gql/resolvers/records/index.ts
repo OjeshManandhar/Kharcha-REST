@@ -5,13 +5,10 @@ import trim from 'validator/lib/trim';
 import User from 'models/user';
 import Record from 'models/record';
 
-// global
-import { RecordType } from 'global/enum';
-
 // utils
-import { validateRecordInput } from 'utils/validation';
 import commonErrorHandler from 'utils/commonErrorHandler';
 import CustomError, { ErrorData } from 'utils/customError';
+import { validateRecordInput, filterUniqueValidTags } from 'utils/validation';
 
 // types
 import type * as T from './types';
@@ -24,7 +21,10 @@ export const createRecord: T.CreateRecord = async (args, req) => {
 
   const errors: ErrorData = [];
 
-  const record = { ...args.record };
+  const record = {
+    ...args.record,
+    tags: filterUniqueValidTags(args.record.tags)
+  };
 
   // Validation
   errors.push(...validateRecordInput(record));
@@ -75,16 +75,6 @@ export const listRecords: T.ListRecords = async (args, req) => {
     throw new CustomError('Unauthorized. Log in first', 401);
   }
 
-  const dummy: T.Record = {
-    _id: 'recordId',
-    userId: 'userId',
-    date: new Date(),
-    amount: 123.45,
-    type: RecordType.DEBIT,
-    tags: [],
-    description: 'just a description'
-  };
-
   // Actual work
   try {
     // Find user
@@ -94,7 +84,17 @@ export const listRecords: T.ListRecords = async (args, req) => {
       throw new CustomError('User not found', 401);
     }
 
-    return [dummy];
+    const foundRecords = await Record.find({ userId: req.userId });
+
+    return foundRecords.map(rec => {
+      const json = rec.toJSON();
+
+      return {
+        ...json,
+        _id: json._id.toString(),
+        userId: json.userId.toString()
+      };
+    });
   } catch (err) {
     commonErrorHandler(err, 'Failed to list records');
   }
