@@ -25,5 +25,5 @@ export type RecordFilter = {
   tagsType: FilterCriteria;
   tags: ?Array<string>;
   description: ?string;
-  criteria: FilterCriteria;
+  filterCriteria: FilterCriteria;
 };

@@ -45,7 +45,7 @@ export const types = `
     tagsType: FilterCriteria!
     tags: [String!]
     description: String
-    criteria: FilterCriteria!
+    filterCriteria: FilterCriteria!
   }
 `;
 

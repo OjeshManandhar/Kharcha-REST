@@ -1,6 +1,5 @@
 // packages
 import type { Request } from 'express';
-import type { Mongoose } from 'mongoose';
 
 // global
 import type { RecordInput, RecordFilter } from 'global/types';
@@ -17,6 +16,18 @@ export type Record = {
   tags: Arrray<string>;
   description: string;
 };
+
+export interface GenerateQuery<T> {
+  (idStart: ?T, idEnd: ?T):
+    | T
+    | {
+        $gte: T;
+        $lte: T;
+      }
+    | { $gte: T }
+    | { $lte: T }
+    | null;
+}
 
 export type CreateRecord = (
   args: { record: RecordInput },
@@ -36,7 +47,7 @@ export type EditRecord = (
 export type FilterRecords = (
   args: { criteria: RecordFilter },
   req: Request
-) => Promise<Array<Record>>;
+) => Promise<Array<Record> | undefined>;
 
 export type DeleteRecord = (
   args: { _id: string },

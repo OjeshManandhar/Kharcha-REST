@@ -5,13 +5,40 @@ import trim from 'validator/lib/trim';
 import User from 'models/user';
 import Record from 'models/record';
 
+// global
+import { TypeCriteria, FilterCriteria } from 'global/enum';
+
 // utils
 import commonErrorHandler from 'utils/commonErrorHandler';
 import CustomError, { ErrorData } from 'utils/customError';
-import { validateRecordInput, filterUniqueValidTags } from 'utils/validation';
+import {
+  validateRecordInput,
+  validateRecordFilter,
+  filterUniqueValidTags
+} from 'utils/validation';
 
 // types
 import type * as T from './types';
+import type { ObjectId } from 'mongoose';
+
+const generateQuery: T.GenerateQuery<ObjectId | Date | number> = (
+  start,
+  end
+) => {
+  if (start && end) {
+    if (start === end) {
+      return start;
+    }
+
+    return { $gte: start, $lte: end };
+  } else if (start && !end) {
+    return { $gte: start };
+  } else if (!start && end) {
+    return { $lte: end };
+  }
+
+  return null;
+};
 
 export const createRecord: T.CreateRecord = async (args, req) => {
   // Auth
@@ -170,6 +197,188 @@ export const editRecord: T.EditRecord = async (args, req) => {
     };
   } catch (err) {
     commonErrorHandler(err, 'Failed to edit record');
+  }
+};
+
+export const filterRecords: T.FilterRecords = async (args, req) => {
+  // Auth
+  if (!req.isAuth || !req.userId) {
+    throw new CustomError('Unauthorized. Log in first', 401);
+  }
+
+  const errors: ErrorData = [];
+
+  const criteria = {
+    ...args.criteria,
+    tags: args.criteria.tags ? filterUniqueValidTags(args.criteria.tags) : []
+  };
+
+  // Validation
+  errors.push(...validateRecordFilter(criteria));
+
+  if (errors.length > 0) {
+    throw new CustomError('Invalid Input', 422, errors);
+  }
+
+  // Actual work
+  try {
+    // Find user
+    const user = await User.findById(req.userId, { tags: 1 });
+
+    if (!user) {
+      throw new CustomError('User not found', 401);
+    }
+
+    /**
+     * for ALL criteria
+     * -  simply use $and
+     *
+     * for ANY criteria
+     * -  As $text wont work with $or unless all entries of $or are indexed
+     * -  So resA = $or of all criteria except description
+     * -  resB = $text for description
+     * -  find resA U resB using _id as PK
+     */
+
+    const filterdRecords: Array<T.Record> = [];
+
+    const {
+      idStart,
+      idEnd,
+      dateStart,
+      dateEnd,
+      amountStart,
+      amountEnd,
+      type,
+      tags,
+      tagsType,
+      description
+    } = criteria;
+
+    const queryList: Array<object> = [];
+
+    // userId
+    queryList.push({ userId: req.userId });
+
+    // _id
+    const idQuery = generateQuery(idStart, idEnd);
+    if (idQuery) {
+      queryList.push({ _id: idQuery });
+    }
+
+    // _date
+    const dateQuery = generateQuery(dateStart, dateEnd);
+    if (dateQuery) {
+      queryList.push({ date: dateQuery });
+    }
+
+    // amount
+    const amountQuery = generateQuery(amountStart, amountEnd);
+    if (amountQuery) {
+      queryList.push({ amount: amountQuery });
+    }
+
+    // type
+    if (type !== TypeCriteria.ANY) {
+      queryList.push({ type });
+    }
+
+    // tags
+    if (tags && tags.length > 0) {
+      // tags that are present in User
+      const validTags: Array<string> = [];
+
+      tags.forEach((tag: string) => {
+        const foundTag = user.tags.find(
+          t => t.toLowerCase() === tag.toLowerCase()
+        );
+
+        // if (foundTag) validTags.push(foundTag);
+        foundTag && validTags.push(foundTag);
+      });
+
+      if (validTags.length === 0) return;
+
+      if (tagsType === FilterCriteria.ALL) {
+        queryList.push({ tags: { $all: validTags } });
+      } else if (tagsType === FilterCriteria.ANY) {
+        queryList.push({ tags: { $in: validTags } });
+      }
+    }
+
+    if (queryList.length === 0 && !description) {
+      throw new CustomError('Invalid Input', 422, [
+        { message: 'Enter at least one criteria' }
+      ]);
+    }
+
+    if (criteria.filterCriteria === FilterCriteria.ALL) {
+      if (description) {
+        queryList.push({
+          $text: { $search: description, $caseSensitive: false }
+        });
+      }
+
+      const foundRecords = await Record.find({ $and: queryList });
+
+      filterdRecords.push(
+        ...foundRecords.map(r => {
+          const rec = r.toJSON();
+
+          return {
+            ...rec,
+            _id: rec._id.toString(),
+            userId: rec.userId.toString()
+          };
+        })
+      );
+    } else if (criteria.filterCriteria === FilterCriteria.ANY) {
+      // find records with any criteria except description
+      const foundWithoutDesc = await Record.find({ $or: queryList });
+
+      const tempWithoutDesc: Array<T.Record> = foundWithoutDesc.map(r => {
+        const rec = r.toJSON();
+
+        return {
+          ...rec,
+          _id: rec._id.toString(),
+          userId: rec.userId.toString()
+        };
+      });
+
+      filterdRecords.push(...tempWithoutDesc);
+
+      if (description) {
+        // records with only description description
+        const foundWithDesc = await Record.find({
+          userId: req.userId,
+          $text: { $search: description, $caseSensitive: false }
+        });
+
+        const tempWithDesc: Array<T.Record> = foundWithDesc.map(r => {
+          const rec = r.toJSON();
+
+          return {
+            ...rec,
+            _id: rec._id.toString(),
+            userId: rec.userId.toString()
+          };
+        });
+
+        // find union
+        tempWithDesc.forEach(rec => {
+          if (
+            !filterdRecords.find(r => r._id.toString() === rec._id.toString())
+          ) {
+            filterdRecords.push(rec);
+          }
+        });
+      }
+    }
+
+    return filterdRecords;
+  } catch (err) {
+    commonErrorHandler(err, 'Failed to filter records');
   }
 };
 
