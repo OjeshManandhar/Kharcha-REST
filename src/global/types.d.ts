@@ -15,15 +15,15 @@ export type RecordInput = {
 };
 
 export type RecordFilter = {
-  idStart: Mongoose.ObjectId;
-  idEnd: Mongoose.ObjectId;
-  dateStart: Date;
-  dateEnd: Date;
-  amountStart: number;
-  amountEnd: number;
+  idStart: ?Mongoose.ObjectId;
+  idEnd: ?Mongoose.ObjectId;
+  dateStart: ?Date;
+  dateEnd: ?Date;
+  amountStart: ?number;
+  amountEnd: ?number;
   type: TypeCriteria;
   tagsType: FilterCriteria;
-  tags: Array<string>;
-  description: string;
+  tags: ?Array<string>;
+  description: ?string;
   criteria: FilterCriteria;
 };

@@ -72,9 +72,10 @@ export const validateRecordInput: T.ValidateRecordInput = record => {
   return errors;
 };
 
-export const validateRecordFilter: T.ValidateRecordFilter = record => {
+export const validateRecordFilter: T.ValidateRecordFilter = criteria => {
   const errors: T.ErrorData = [];
-  const { idStart, idEnd, dateStart, dateEnd, amountStart, amountEnd } = record;
+  const { idStart, idEnd, dateStart, dateEnd, amountStart, amountEnd } =
+    criteria;
 
   if (idStart && idEnd && idStart.toString() > idEnd.toString()) {
     errors.push({
@@ -85,32 +86,33 @@ export const validateRecordFilter: T.ValidateRecordFilter = record => {
 
   if (dateStart && !isBefore(dateStart.toISOString())) {
     errors.push({
-      message: 'dateStart must be greater than or equal to 0',
+      message: 'dateStart must be today or before today',
       field: 'dateStart'
     });
   }
   if (dateEnd && !isBefore(dateEnd.toISOString())) {
     errors.push({
-      message: 'dateEnd must be greater than 0',
+      message: 'dateEnd must be today or before today',
       field: 'dateEnd'
     });
   }
   if (
     dateStart &&
-    !isBefore(dateStart.toISOString()) &&
+    isBefore(dateStart.toISOString()) &&
     dateEnd &&
-    !isBefore(dateEnd.toISOString()) &&
+    isBefore(dateEnd.toISOString()) &&
+    // isBefore(dateEnd.toISOString(), dateStart.toISOString())
     dateStart > dateEnd
   ) {
     errors.push({
-      message: 'dateEnd cannot be smaller than dateStart',
+      message: 'dateEnd cannot be before dateStart',
       field: 'dateEnd'
     });
   }
 
   if (amountStart && amountStart < 0) {
     errors.push({
-      message: 'amountStart must be greater than or equal to 0',
+      message: 'amountStart must be greater than 0',
       field: 'amountStart'
     });
   }
@@ -122,9 +124,9 @@ export const validateRecordFilter: T.ValidateRecordFilter = record => {
   }
   if (
     amountStart &&
-    amountStart < 0 &&
+    amountStart >= 0 &&
     amountEnd &&
-    amountEnd <= 0 &&
+    amountEnd > 0 &&
     amountStart > amountEnd
   ) {
     errors.push({

@@ -43,7 +43,7 @@ export const types = `
     amountEnd: Float
     type: TypeCriteria!
     tagsType: FilterCriteria!
-    tags: [String!]!
+    tags: [String!]
     description: String
     criteria: FilterCriteria!
   }
