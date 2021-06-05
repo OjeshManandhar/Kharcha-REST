@@ -47,9 +47,8 @@ export const filterUniqueValidTags: T.FilterUniqueValidTags = tags => {
 
 // Records
 export const validateRecordInput: T.ValidateRecordInput = record => {
-  const { date, amount, type } = record;
-
   const errors: T.ErrorData = [];
+  const { date, amount, type } = record;
 
   if (!isBefore(date.toISOString())) {
     errors.push({
@@ -67,6 +66,70 @@ export const validateRecordInput: T.ValidateRecordInput = record => {
     errors.push({
       message: `type must be either ${RecordType.DEBIT} or ${RecordType.CREDIT}`,
       field: 'type'
+    });
+  }
+
+  return errors;
+};
+
+export const validateRecordFilter: T.ValidateRecordFilter = record => {
+  const errors: T.ErrorData = [];
+  const { idStart, idEnd, dateStart, dateEnd, amountStart, amountEnd } = record;
+
+  if (idStart && idEnd && idStart.toString() > idEnd.toString()) {
+    errors.push({
+      message: 'idEnd cannot be smaller than idStart',
+      field: 'idEnd'
+    });
+  }
+
+  if (dateStart && !isBefore(dateStart.toISOString())) {
+    errors.push({
+      message: 'dateStart must be greater than or equal to 0',
+      field: 'dateStart'
+    });
+  }
+  if (dateEnd && !isBefore(dateEnd.toISOString())) {
+    errors.push({
+      message: 'dateEnd must be greater than 0',
+      field: 'dateEnd'
+    });
+  }
+  if (
+    dateStart &&
+    !isBefore(dateStart.toISOString()) &&
+    dateEnd &&
+    !isBefore(dateEnd.toISOString()) &&
+    dateStart > dateEnd
+  ) {
+    errors.push({
+      message: 'dateEnd cannot be smaller than dateStart',
+      field: 'dateEnd'
+    });
+  }
+
+  if (amountStart && amountStart < 0) {
+    errors.push({
+      message: 'amountStart must be greater than or equal to 0',
+      field: 'amountStart'
+    });
+  }
+  if (amountEnd && amountEnd <= 0) {
+    errors.push({
+      message: 'amountEnd must be greater than 0',
+      field: 'amountEnd'
+    });
+  }
+  if (
+    amountStart &&
+    amountStart < 0 &&
+    amountEnd &&
+    amountEnd <= 0 &&
+    amountStart > amountEnd
+  ) {
+    errors.push({
+      message: 'amountEnd cannot be smaller than amountStart',
+      field: 'amountEnd'
     });
   }
 

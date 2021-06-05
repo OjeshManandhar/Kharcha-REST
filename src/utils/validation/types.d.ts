@@ -19,3 +19,4 @@ export type FilterUniqueValidTags = (tags: Array<string>) => Array<string>;
 
 // Record
 export type ValidateRecordInput = (record: RecordInput) => ErrorData;
+export type ValidateRecordFilter = (record: RecordFilter) => ErrorData;

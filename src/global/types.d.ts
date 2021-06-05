@@ -1,9 +1,12 @@
+// packages
+import type { Mongoose } from 'mongoose';
+
 export type Token = {
   _id?: string;
 };
 
 export type RecordInput = {
-  _id: ?string;
+  _id: ?Mongoose.ObjectId;
   date: Date;
   amount: number;
   type: RecordType;
@@ -12,8 +15,8 @@ export type RecordInput = {
 };
 
 export type RecordFilter = {
-  idStart: string;
-  idEnd: string;
+  idStart: Mongoose.ObjectId;
+  idEnd: Mongoose.ObjectId;
   dateStart: Date;
   dateEnd: Date;
   amountStart: number;

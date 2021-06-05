@@ -1,5 +1,6 @@
 // packages
 import type { Request } from 'express';
+import type { Mongoose } from 'mongoose';
 
 // global
 import type { RecordInput, RecordFilter } from 'global/types';
@@ -8,7 +9,7 @@ import { RecordType, TypeCriteria, FilterCriteria } from 'global/enum';
 export type { RecordInput, RecordFilter };
 
 export type Record = {
-  _id: string;
+  _id: Mongoose.ObjectId;
   userId: string;
   date: Date;
   amount: number;
