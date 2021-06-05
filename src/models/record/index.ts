@@ -37,4 +37,7 @@ const schema = new Schema<IRecord>({
   }
 });
 
+// Create text index
+schema.index({ description: 'text' });
+
 export default model<IRecord>('Record', schema);
