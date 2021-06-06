@@ -25,7 +25,6 @@ const generateQuery: T.GenerateQuery<mongoose.Types.ObjectId | Date | number> =
   (start, end) => {
     if (start && end) {
       if (start.toString() === end.toString()) {
-        console.log('start === end', start);
         return start;
       }
 
@@ -272,9 +271,6 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
 
     const queryList: Array<object> = [];
 
-    // userId
-    queryList.push({ userId: req.userId });
-
     // _id
     const idQuery = generateQuery(
       idStart ? mongoose.Types.ObjectId(idStart) : null,
@@ -326,8 +322,7 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
       }
     }
 
-    // 1 because { userId: ... } is added
-    if (queryList.length === 1 && !description) {
+    if (queryList.length === 0 && !description) {
       throw new CustomError('Invalid Input', 422, [
         { message: 'Enter at least one criteria' }
       ]);
@@ -340,7 +335,10 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
         });
       }
 
-      const foundRecords = await Record.find({ $and: queryList });
+      const foundRecords = await Record.find({
+        userId: req.userId,
+        $and: queryList
+      });
 
       filterdRecords.push(
         ...foundRecords.map(r => {
@@ -355,7 +353,10 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
       );
     } else if (criteria.filterCriteria === FilterCriteria.ANY) {
       // find records with any criteria except description
-      const foundWithoutDesc = await Record.find({ $or: queryList });
+      const foundWithoutDesc = await Record.find({
+        userId: req.userId,
+        $or: queryList
+      });
 
       const tempWithoutDesc: Array<T.Record> = foundWithoutDesc.map(r => {
         const rec = r.toJSON();
