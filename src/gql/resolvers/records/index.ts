@@ -180,6 +180,19 @@ export const editRecord: T.EditRecord = async (args, req) => {
       throw new CustomError('Unauthorized', 401);
     }
 
+    // find valid tags
+    const validTags: Array<string> = [];
+    record.tags.forEach((tag: string) => {
+      const foundTag = user.tags.find(
+        t => t.toLowerCase() === tag.toLowerCase()
+      );
+
+      // if (foundTag) validTags.push(foundTag);
+      foundTag && validTags.push(foundTag);
+    });
+
+    record.tags = [...validTags];
+
     // Add changes
     Object.assign(existingRecord, record);
 
