@@ -223,7 +223,10 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
 
   const criteria = {
     ...args.criteria,
-    tags: args.criteria.tags ? filterUniqueValidTags(args.criteria.tags) : []
+    type: args.criteria.type || TypeCriteria.ANY,
+    tagsType: args.criteria.tagsType || FilterCriteria.ANY,
+    tags: args.criteria.tags ? filterUniqueValidTags(args.criteria.tags) : [],
+    filterCriteria: args.criteria.filterCriteria || FilterCriteria.ANY
   };
 
   // Validation
@@ -297,7 +300,7 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
     }
 
     // tags
-    if (tags && tags.length > 0) {
+    if (tags.length > 0) {
       // tags that are present in User
       const validTags: Array<string> = [];
 
@@ -319,7 +322,8 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
       }
     }
 
-    if (queryList.length === 0 && !description) {
+    // 1 because { userId: ... } is added
+    if (queryList.length === 1 && !description) {
       throw new CustomError('Invalid Input', 422, [
         { message: 'Enter at least one criteria' }
       ]);

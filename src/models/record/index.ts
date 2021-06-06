@@ -31,7 +31,6 @@ const schema = new Schema<IRecord>({
   },
   description: {
     type: String,
-    required: true,
     default: '',
     trim: true
   }
