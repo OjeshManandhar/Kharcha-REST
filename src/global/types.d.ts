@@ -1,6 +1,3 @@
-// packages
-import type { Mongoose } from 'mongoose';
-
 // enum
 import { RecordType, TypeCriteria, FilterCriteria } from './enum';
 
@@ -8,9 +5,12 @@ export type Token = {
   _id?: string;
 };
 
+// _id is not Mongoose.ObjectID in Record*
+// because it will ne sent and received as string
+
 export type Record = {
-  _id: Mongoose.ObjectId;
-  userId: Mongoose.ObjectId;
+  _id: string;
+  userId: string;
   date: Date;
   amount: number;
   type: RecordType;
@@ -19,7 +19,7 @@ export type Record = {
 };
 
 export type RecordInput = {
-  _id: ?Mongoose.ObjectId;
+  _id: ?string;
   date: Date;
   amount: number;
   type: RecordType;
@@ -28,8 +28,8 @@ export type RecordInput = {
 };
 
 export type RecordFilter = {
-  idStart: ?Mongoose.ObjectId;
-  idEnd: ?Mongoose.ObjectId;
+  idStart: ?string;
+  idEnd: ?string;
   dateStart: ?Date;
   dateEnd: ?Date;
   amountStart: ?number;

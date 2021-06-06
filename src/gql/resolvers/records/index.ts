@@ -1,4 +1,5 @@
 // packages
+import mongoose from 'mongoose';
 import trim from 'validator/lib/trim';
 
 // model
@@ -19,26 +20,24 @@ import {
 
 // types
 import type * as T from './types';
-import type { ObjectId } from 'mongoose';
 
-const generateQuery: T.GenerateQuery<ObjectId | Date | number> = (
-  start,
-  end
-) => {
-  if (start && end) {
-    if (start === end) {
-      return start;
+const generateQuery: T.GenerateQuery<mongoose.Types.ObjectId | Date | number> =
+  (start, end) => {
+    if (start && end) {
+      if (start.toString() === end.toString()) {
+        console.log('start === end', start);
+        return start;
+      }
+
+      return { $gte: start, $lte: end };
+    } else if (start && !end) {
+      return { $gte: start };
+    } else if (!start && end) {
+      return { $lte: end };
     }
 
-    return { $gte: start, $lte: end };
-  } else if (start && !end) {
-    return { $gte: start };
-  } else if (!start && end) {
-    return { $lte: end };
-  }
-
-  return null;
-};
+    return null;
+  };
 
 export const createRecord: T.CreateRecord = async (args, req) => {
   // Auth
@@ -277,7 +276,10 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
     queryList.push({ userId: req.userId });
 
     // _id
-    const idQuery = generateQuery(idStart, idEnd);
+    const idQuery = generateQuery(
+      idStart ? mongoose.Types.ObjectId(idStart) : null,
+      idEnd ? mongoose.Types.ObjectId(idEnd) : null
+    );
     if (idQuery) {
       queryList.push({ _id: idQuery });
     }
@@ -293,6 +295,8 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
     if (amountQuery) {
       queryList.push({ amount: amountQuery });
     }
+
+    console.dir(queryList);
 
     // type
     if (type !== TypeCriteria.ANY) {
