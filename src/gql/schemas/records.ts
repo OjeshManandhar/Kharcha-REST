@@ -41,11 +41,11 @@ export const types = `
     dateEnd: Date
     amountStart: Float
     amountEnd: Float
-    type: TypeCriteria!
-    tagsType: FilterCriteria!
+    type: TypeCriteria
+    tagsType: FilterCriteria
     tags: [String!]
     description: String
-    filterCriteria: FilterCriteria!
+    filterCriteria: FilterCriteria
   }
 `;
 
