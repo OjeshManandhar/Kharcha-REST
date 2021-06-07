@@ -10,17 +10,19 @@ export const types = `
   }
 `;
 
+export const queries = `
+  login(
+    username: String!
+    password: String!
+  ): AuthPayload
+`;
+
 export const mutations = `
   createUser(
     username: String!
     password: String!
     confirmPassword: String!
   ): NewUserData
-
-  login(
-    username: String!
-    password: String!
-  ): AuthPayload
 
   changePassword(
     oldPassword: String!

@@ -16,6 +16,7 @@ const schema = buildSchema(`
   ${records.types}
 
   type RootQuery {
+    ${users.queries}
     ${tags.queries}
     ${records.queries}
   }
