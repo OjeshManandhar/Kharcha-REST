@@ -217,7 +217,8 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
     throw new CustomError('Unauthorized. Log in first', 401);
   }
 
-  const errors: ErrorData = [];
+  const errors: ErrorData = [],
+    queryErrors: ErrorData = [];
 
   const criteria = {
     ...args.criteria,
@@ -292,8 +293,6 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
       queryList.push({ amount: amountQuery });
     }
 
-    console.dir(queryList);
-
     // type
     if (type !== TypeCriteria.ANY) {
       queryList.push({ type });
@@ -313,19 +312,28 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
         foundTag && validTags.push(foundTag);
       });
 
-      if (validTags.length === 0) return;
+      if (validTags.length !== 0) {
+        console.log('valid tags:', validTags);
 
-      if (tagsType === FilterCriteria.ALL) {
-        queryList.push({ tags: { $all: validTags } });
-      } else if (tagsType === FilterCriteria.ANY) {
-        queryList.push({ tags: { $in: validTags } });
+        if (tagsType === FilterCriteria.ALL) {
+          queryList.push({ tags: { $all: validTags } });
+        } else if (tagsType === FilterCriteria.ANY) {
+          queryList.push({ tags: { $in: validTags } });
+        }
+      } else {
+        queryErrors.push({
+          message: 'No valid tags',
+          field: 'tags'
+        });
       }
     }
 
     if (queryList.length === 0 && !description) {
-      throw new CustomError('Invalid Input', 422, [
-        { message: 'Enter at least one criteria' }
-      ]);
+      queryErrors.push({
+        message: 'Enter at least one valid criteria'
+      });
+
+      throw new CustomError('Invalid Input', 422, queryErrors);
     }
 
     if (criteria.filterCriteria === FilterCriteria.ALL) {
@@ -334,6 +342,8 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
           $text: { $search: description, $caseSensitive: false }
         });
       }
+
+      console.log('ALL:', queryList);
 
       const foundRecords = await Record.find({
         userId: req.userId,
@@ -352,23 +362,27 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
         })
       );
     } else if (criteria.filterCriteria === FilterCriteria.ANY) {
+      console.log('ANY:', queryList);
+
       // find records with any criteria except description
-      const foundWithoutDesc = await Record.find({
-        userId: req.userId,
-        $or: queryList
-      });
+      if (queryList.length > 0) {
+        const foundWithoutDesc = await Record.find({
+          userId: req.userId,
+          $or: queryList
+        });
 
-      const tempWithoutDesc: Array<T.Record> = foundWithoutDesc.map(r => {
-        const rec = r.toJSON();
+        const tempWithoutDesc: Array<T.Record> = foundWithoutDesc.map(r => {
+          const rec = r.toJSON();
 
-        return {
-          ...rec,
-          _id: rec._id.toString(),
-          userId: rec.userId.toString()
-        };
-      });
+          return {
+            ...rec,
+            _id: rec._id.toString(),
+            userId: rec.userId.toString()
+          };
+        });
 
-      filterdRecords.push(...tempWithoutDesc);
+        filterdRecords.push(...tempWithoutDesc);
+      }
 
       if (description) {
         // records with only description description
