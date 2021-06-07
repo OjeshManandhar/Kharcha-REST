@@ -6,7 +6,8 @@
   "scripts": {
     "build": "rm -rf dist && tsc",
     "start": "NODE_PATH=./src nodemon",
-    "prod": "yarn build && NODE_PATH=./dist node ./dist",
+    "prod:js": "yarn build && NODE_PATH=./dist node ./dist",
+    "prod": "NODE_PATH=./src ts-node ./src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
