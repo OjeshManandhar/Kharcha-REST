@@ -313,8 +313,6 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
       });
 
       if (validTags.length !== 0) {
-        console.log('valid tags:', validTags);
-
         if (tagsType === FilterCriteria.ALL) {
           queryList.push({ tags: { $all: validTags } });
         } else if (tagsType === FilterCriteria.ANY) {
@@ -343,8 +341,6 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
         });
       }
 
-      console.log('ALL:', queryList);
-
       const foundRecords = await Record.find({
         userId: req.userId,
         $and: queryList
@@ -362,8 +358,6 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
         })
       );
     } else if (criteria.filterCriteria === FilterCriteria.ANY) {
-      console.log('ANY:', queryList);
-
       // find records with any criteria except description
       if (queryList.length > 0) {
         const foundWithoutDesc = await Record.find({
