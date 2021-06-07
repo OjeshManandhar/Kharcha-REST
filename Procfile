@@ -1,1 +1,1 @@
-web: NODE_PATH=./src ts-node ./src/index.ts
+web: yarn prod
