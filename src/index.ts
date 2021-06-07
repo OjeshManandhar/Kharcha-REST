@@ -19,7 +19,13 @@ import resolvers from 'gql/resolvers';
 import CustomError from 'utils/customError';
 
 // env
-import { PORT, MONGO_DB, MONGO_USER, MONGO_PASS } from 'env_config';
+import {
+  PORT,
+  MONGO_DB,
+  MONGO_USER,
+  MONGO_PASS,
+  DEV_FEATURE
+} from 'env_config';
 
 const app = express();
 
@@ -43,7 +49,7 @@ app.use(
   graphqlHTTP({
     schema: schema,
     rootValue: resolvers,
-    graphiql: true,
+    graphiql: DEV_FEATURE,
     customFormatErrorFn: err => {
       if (!err.originalError) {
         return err;
