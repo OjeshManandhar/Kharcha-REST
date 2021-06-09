@@ -36,8 +36,18 @@ export default (req: Request, res: Response, next: NextFunction): void => {
 
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) {
+      const expiredAt = (err as { expiredAt: Date | undefined }).expiredAt;
+
       req.isAuth = false;
-      next(new CustomError('Token expired', 401));
+
+      next(
+        new CustomError('Invalid Token', 401, [
+          {
+            message: expiredAt ? 'Token expired' : 'Invalid Signature',
+            field: 'Authorization'
+          }
+        ])
+      );
     }
 
     const decodedToken = decoded as Token;
