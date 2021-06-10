@@ -15,7 +15,8 @@ import { JWT_SECRET } from 'env_config';
 import type { Request, Response, NextFunction } from 'express';
 
 export default (req: Request, res: Response, next: NextFunction): void => {
-  const authHeader = req.get('Authorization');
+  const authHeader = req.headers.authorization;
+
   if (!authHeader) {
     req.isAuth = false;
     next();
