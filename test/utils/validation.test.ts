@@ -382,6 +382,96 @@ describe('[validation] Validation utility', () => {
             });
         });
       });
+
+      describe('[amount]', () => {
+        it('should not return error on field amountStart if it is not given or is given and >= 0', () => {
+          criteria.amountStart = null;
+          criteria.amountEnd = null;
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: 'amountStart must be greater than 0',
+              field: 'amountStart'
+            });
+
+          criteria.amountStart = 0;
+          criteria.amountEnd = null;
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: 'amountStart must be greater than 0',
+              field: 'amountStart'
+            });
+        });
+
+        it('should return error on field amountStart if it is given and is < 0', () => {
+          criteria.amountStart = -100;
+          criteria.amountEnd = null;
+
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.deep.include({
+              message: 'amountStart must be greater than 0',
+              field: 'amountStart'
+            });
+        });
+
+        it('should not return error on field amountEnd if it is not given or is given and > 0', () => {
+          criteria.amountStart = null;
+          criteria.amountEnd = null;
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: 'amountEnd must be greater than 0',
+              field: 'amountEnd'
+            });
+
+          criteria.amountStart = null;
+          criteria.amountEnd = 100;
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: 'amountEnd must be greater than 0',
+              field: 'amountEnd'
+            });
+        });
+
+        it('should return error on field amountEnd if it is given and <= 0', () => {
+          criteria.amountStart = null;
+          criteria.amountEnd = 0;
+
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.deep.include({
+              message: 'amountEnd must be greater than 0',
+              field: 'amountEnd'
+            });
+        });
+
+        it('should not return error on field amountEnd if both are given and are before today but amountEnd is after amountStart', () => {
+          criteria.amountStart = 0;
+          criteria.amountEnd = 100;
+
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: 'amountEnd cannot be smaller than amountStart',
+              field: 'amountEnd'
+            });
+        });
+
+        it('should return error on field amountEnd if both are given and are before today but amountEnd is before amountStart', () => {
+          criteria.amountStart = 100;
+          criteria.amountEnd = 10;
+
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.deep.include({
+              message: 'amountEnd cannot be smaller than amountStart',
+              field: 'amountEnd'
+            });
+        });
+      });
     });
   });
 });
