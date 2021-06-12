@@ -5,10 +5,14 @@ import { expect } from 'chai';
 import * as validation from './../../src/utils/validation';
 
 // global
-import { RecordType } from '../../src/global/enum';
+import {
+  RecordType,
+  TypeCriteria,
+  FilterCriteria
+} from '../../src/global/enum';
 
 // types
-import type { RecordInput } from './../../src/global/types';
+import type { RecordInput, RecordFilter } from './../../src/global/types';
 
 describe('[validation] Validation utility', () => {
   describe('[User] Validation related to user', () => {
@@ -124,7 +128,7 @@ describe('[validation] Validation utility', () => {
         record.description = '';
       });
 
-      describe('[Date]', () => {
+      describe('[date]', () => {
         it('should not return error on date field when date is today or before today', () => {
           expect(validation.validateRecordInput(record))
             .to.be.an('array')
@@ -147,7 +151,7 @@ describe('[validation] Validation utility', () => {
         });
       });
 
-      describe('[Amount]', () => {
+      describe('[amount]', () => {
         it('should not return error on amount field when amount is greater than 0', () => {
           expect(validation.validateRecordInput(record))
             .to.be.an('array')
@@ -182,7 +186,7 @@ describe('[validation] Validation utility', () => {
         });
       });
 
-      describe('[Tags]', () => {
+      describe('[tags]', () => {
         it(`should not return error on type field when type is '${RecordType.DEBIT}'`, () => {
           expect(validation.validateRecordInput(record))
             .to.be.an('array')
@@ -219,6 +223,67 @@ describe('[validation] Validation utility', () => {
       });
     });
 
-    describe('[record filter]', () => {});
+    describe('[record filter]', () => {
+      const criteria: RecordFilter = {
+        idStart: '123',
+        idEnd: '234',
+        dateStart: new Date('2020-01-01'),
+        dateEnd: new Date('2020-02-01'),
+        amountStart: 100,
+        amountEnd: 200,
+        type: TypeCriteria.ANY,
+        tagsType: FilterCriteria.ANY,
+        tags: [],
+        description: '',
+        filterCriteria: FilterCriteria.ANY
+      };
+
+      beforeEach(() => {
+        criteria.idStart = '123';
+        criteria.idEnd = '234';
+        criteria.dateStart = new Date('2020-01-01');
+        criteria.dateEnd = new Date('2020-02-01');
+        criteria.amountStart = 100;
+        criteria.amountEnd = 200;
+        criteria.type = TypeCriteria.ANY;
+        criteria.tagsType = FilterCriteria.ANY;
+        criteria.tags = [];
+        criteria.description = '';
+        criteria.filterCriteria = FilterCriteria.ANY;
+      });
+
+      describe('[_id]', () => {
+        it('should not return error on idStart or idEnd field if any one is not given', () => {
+          criteria.idStart = null;
+          criteria.idEnd = '234';
+
+          expect(validation.validateRecordFilter(criteria)).to.be.an('array')
+            .that.is.empty;
+
+          criteria.idStart = '123';
+          criteria.idEnd = null;
+
+          expect(validation.validateRecordFilter(criteria)).to.be.an('array')
+            .that.is.empty;
+        });
+
+        it('should not return error on idStart or idEnd field when both are given and idStart comes before idEnd', () => {
+          expect(validation.validateRecordFilter(criteria)).to.be.an('array')
+            .that.is.empty;
+        });
+
+        it('should return error on idEnd field when both are given and idStart comes after idEnd', () => {
+          criteria.idStart = '234';
+          criteria.idEnd = '123';
+
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.deep.include({
+              message: 'idEnd cannot be smaller than idStart',
+              field: 'idEnd'
+            });
+        });
+      });
+    });
   });
 });
