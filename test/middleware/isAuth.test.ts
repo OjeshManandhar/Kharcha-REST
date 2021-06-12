@@ -34,7 +34,10 @@ describe('[isAuth] Authorization middleware', () => {
   it('should call next() and req.isAuth = false when req is {}', () => {
     mockNext = (args: any) => {
       expect(args).to.be.undefined;
-      expect(mockReq).to.have.property('isAuth', false);
+
+      expect(mockReq)
+        .to.have.property('isAuth', false)
+        .and.not.have.property('userId');
     };
 
     isAuth(mockReq as Request, mockRes as Response, mockNext as NextFunction);
@@ -45,7 +48,10 @@ describe('[isAuth] Authorization middleware', () => {
 
     mockNext = (args: any) => {
       expect(args).to.be.undefined;
-      expect(mockReq).to.have.property('isAuth', false);
+
+      expect(mockReq)
+        .to.have.property('isAuth', false)
+        .and.not.have.property('userId');
     };
 
     isAuth(mockReq as Request, mockRes as Response, mockNext as NextFunction);
@@ -56,7 +62,10 @@ describe('[isAuth] Authorization middleware', () => {
 
     mockNext = (args: any) => {
       expect(args).to.be.undefined;
-      expect(mockReq).to.have.property('isAuth', false);
+
+      expect(mockReq)
+        .to.have.property('isAuth', false)
+        .and.not.have.property('userId');
     };
 
     isAuth(mockReq as Request, mockRes as Response, mockNext as NextFunction);
@@ -71,7 +80,10 @@ describe('[isAuth] Authorization middleware', () => {
       expect(args)
         .to.be.an.instanceOf(CustomError)
         .that.has.property('message', 'JWT error');
-      expect(mockReq).to.have.property('isAuth', false);
+
+      expect(mockReq)
+        .to.have.property('isAuth', false)
+        .and.not.have.property('userId');
     };
 
     isAuth(mockReq as Request, mockRes as Response, mockNext as NextFunction);
@@ -94,7 +106,9 @@ describe('[isAuth] Authorization middleware', () => {
           field: 'Authorization'
         });
 
-      expect(mockReq).to.have.property('isAuth', false);
+      expect(mockReq)
+        .to.have.property('isAuth', false)
+        .and.not.have.property('userId');
 
       done();
     };
@@ -125,7 +139,9 @@ describe('[isAuth] Authorization middleware', () => {
           field: 'Authorization'
         });
 
-      expect(mockReq).to.have.property('isAuth', false);
+      expect(mockReq)
+        .to.have.property('isAuth', false)
+        .and.not.have.property('userId');
 
       done();
     };
@@ -153,7 +169,10 @@ describe('[isAuth] Authorization middleware', () => {
           message: 'Token has been changed',
           field: 'Authorization'
         });
-      expect(mockReq).to.have.property('isAuth', false);
+
+      expect(mockReq)
+        .to.have.property('isAuth', false)
+        .and.not.have.property('userId');
 
       done();
     };
@@ -174,6 +193,7 @@ describe('[isAuth] Authorization middleware', () => {
 
     mockNext = (args: any) => {
       expect(args).to.be.undefined;
+
       expect(mockReq).to.have.property('isAuth', true);
       expect(mockReq).to.have.property('userId').that.deep.equal(_id);
 
@@ -192,6 +212,7 @@ describe('[isAuth] Authorization middleware', () => {
 
     mockNext = (args: any) => {
       expect(args).to.be.undefined;
+
       expect(mockReq).to.have.property('isAuth', false);
       expect(mockReq).to.not.have.property('userId');
 

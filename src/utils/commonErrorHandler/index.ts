@@ -11,7 +11,8 @@ const commonErrorHandler: CommonErrorHandler = (err, msg) => {
   if (err instanceof CustomError) {
     throw err;
   } else {
-    console.log('Error:', err);
+    if (process.env.NODE_ENV !== 'test') console.log('Error:', err);
+
     throw new CustomError(
       msg,
       500,
