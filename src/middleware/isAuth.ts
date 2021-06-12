@@ -54,11 +54,24 @@ export default (req: Request, res: Response, next: NextFunction): void => {
     const decodedToken = decoded as Token;
 
     if (decodedToken && decodedToken._id) {
-      req.isAuth = true;
-      req.userId = mongoose.Types.ObjectId(decodedToken._id);
-      next();
-    } else {
-      next();
+      try {
+        req.userId = mongoose.Types.ObjectId(decodedToken._id);
+        req.isAuth = true;
+        next();
+      } catch {
+        next(
+          new CustomError('Invalid Token', 401, [
+            {
+              message: 'Token has been changed',
+              field: 'Authorization'
+            }
+          ])
+        );
+      }
+
+      return;
     }
+
+    next();
   });
 };

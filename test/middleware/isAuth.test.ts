@@ -135,6 +135,34 @@ describe('Authorization middleware', () => {
     jwtStub.restore();
   });
 
+  it("should call next(CustomError('Invalid token')) and req.isAuth = false when token._id is invalid", done => {
+    const jwtStub = sinon
+      .stub(jwt, 'verify')
+      .callsArgWith(2, undefined, { _id: '1234567890' });
+
+    mockReq.headers = { authorization: 'Bearer token' };
+
+    mockNext = (args: any) => {
+      expect(args).to.be.an.instanceOf(CustomError);
+      expect(args).to.have.property('message', 'Invalid Token');
+      expect(args).to.have.property('status', 401);
+      expect(args)
+        .to.have.property('data')
+        .that.is.an('array')
+        .and.deep.include({
+          message: 'Token has been changed',
+          field: 'Authorization'
+        });
+      expect(mockReq).to.have.property('isAuth', false);
+
+      done();
+    };
+
+    isAuth(mockReq as Request, mockRes as Response, mockNext as NextFunction);
+
+    jwtStub.restore();
+  });
+
   it('should call next() and req = { isAuth: true, userId: {...} } when jwt is valid ', done => {
     const _id = new Types.ObjectId();
 
