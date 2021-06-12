@@ -16,7 +16,7 @@ import * as env_config from './../../src/env_config';
 // types
 import type { Request, Response, NextFunction } from 'express';
 
-describe('Authorization middleware', () => {
+describe('[isAuth] Authorization middleware', () => {
   const mockRes: Partial<Response> = {};
 
   let mockReq: Partial<Request>;
