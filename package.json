@@ -9,7 +9,7 @@
     "prod:js": "yarn build:js && NODE_PATH=./dist node ./dist",
     "prod": "NODE_PATH=./src ts-node ./src/index.ts",
     "test": "NODE_ENV=test NODE_PATH=./src mocha --check-leaks -r ts-node/register -r dotenv/config \"./test/**/*.test.ts\"",
-    "test:dev": "NODE_ENV=test NODE_PATH=./src mocha --check-leaks --watch --watch-files ./test -r ts-node/register -r dotenv/config \"./test/**/*.test.ts\""
+    "test:watch": "NODE_ENV=test NODE_PATH=./src mocha --check-leaks --watch --watch-files ./test --watch-files ./src -r ts-node/register -r dotenv/config \"./test/**/*.test.ts\""
   },
   "keywords": [
     "REST",
