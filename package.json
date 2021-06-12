@@ -8,7 +8,7 @@
     "start": "NODE_PATH=./src nodemon",
     "prod:js": "yarn build:js && NODE_PATH=./dist node ./dist",
     "prod": "NODE_PATH=./src ts-node ./src/index.ts",
-    "test": "NODE_PATH=./src mocha --check-leaks -r ts-node/register \"./test/**/*.test.ts\""
+    "test": "NODE_ENV=test NODE_PATH=./src mocha --check-leaks -r ts-node/register -r dotenv/config \"./test/**/*.test.ts\""
   },
   "keywords": [
     "REST",
