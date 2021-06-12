@@ -1,5 +1,5 @@
 // packages
-import sinon from 'sinon';
+import { stub } from 'sinon';
 import { expect } from 'chai';
 
 // utils
@@ -9,7 +9,7 @@ import commonErrorHandler from './../../src/utils/commonErrorHandler';
 // env
 import * as env_config from './../../src/env_config';
 
-describe('[commonErrorHandler.test] Common error handler utility', () => {
+describe('[commonErrorHandler] Common error handler utility', () => {
   const message = 'Test messsage';
 
   it('should throw the same error when error is CustomError', () => {
@@ -19,7 +19,7 @@ describe('[commonErrorHandler.test] Common error handler utility', () => {
   });
 
   it('should throw CustomError with given message and status 500 with empty data field when error is not CustomError and DEV_FEATURE is false', () => {
-    const devFeatStub = sinon.stub(env_config, 'DEV_FEATURE').value(false);
+    const devFeatStub = stub(env_config, 'DEV_FEATURE').value(false);
 
     const error = new Error('Test error');
 
@@ -36,7 +36,7 @@ describe('[commonErrorHandler.test] Common error handler utility', () => {
   });
 
   it('should throw CustomError with given message and status 500 with single object in data field when error is not CustomError and DEV_FEATURE is true', () => {
-    const devFeatStub = sinon.stub(env_config, 'DEV_FEATURE').value(true);
+    const devFeatStub = stub(env_config, 'DEV_FEATURE').value(true);
 
     const errMsg = 'Test error';
     const error = new Error(errMsg);
