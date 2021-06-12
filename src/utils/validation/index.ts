@@ -116,7 +116,7 @@ export const validateRecordFilter: T.ValidateRecordFilter = criteria => {
       field: 'amountStart'
     });
   }
-  if (amountEnd && amountEnd <= 0) {
+  if ((amountEnd || amountEnd === 0) && amountEnd <= 0) {
     errors.push({
       message: 'amountEnd must be greater than 0',
       field: 'amountEnd'
