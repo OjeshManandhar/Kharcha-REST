@@ -143,7 +143,6 @@ describe('[validation] Validation utility', () => {
 
           expect(validation.validateRecordInput(record))
             .to.be.an('array')
-            .of.length(1)
             .and.deep.include({
               message: 'date must be at today or before today',
               field: 'date'
@@ -166,7 +165,6 @@ describe('[validation] Validation utility', () => {
 
           expect(validation.validateRecordInput(record))
             .to.be.an('array')
-            .of.length(1)
             .and.deep.include({
               message: 'amount must be greater than 0',
               field: 'amount'
@@ -178,7 +176,6 @@ describe('[validation] Validation utility', () => {
 
           expect(validation.validateRecordInput(record))
             .to.be.an('array')
-            .of.length(1)
             .and.deep.include({
               message: 'amount must be greater than 0',
               field: 'amount'
@@ -214,7 +211,6 @@ describe('[validation] Validation utility', () => {
 
           expect(validation.validateRecordInput(record))
             .to.be.an('array')
-            .of.length(1)
             .and.deep.include({
               message: `type must be either '${RecordType.DEBIT}' or '${RecordType.CREDIT}'`,
               field: 'type'
@@ -257,19 +253,31 @@ describe('[validation] Validation utility', () => {
           criteria.idStart = null;
           criteria.idEnd = '234';
 
-          expect(validation.validateRecordFilter(criteria)).to.be.an('array')
-            .that.is.empty;
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: 'idEnd cannot be smaller than idStart',
+              field: 'idEnd'
+            });
 
           criteria.idStart = '123';
           criteria.idEnd = null;
 
-          expect(validation.validateRecordFilter(criteria)).to.be.an('array')
-            .that.is.empty;
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: 'idEnd cannot be smaller than idStart',
+              field: 'idEnd'
+            });
         });
 
         it('should not return error on idStart or idEnd field when both are given and idStart comes before idEnd', () => {
-          expect(validation.validateRecordFilter(criteria)).to.be.an('array')
-            .that.is.empty;
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: 'idEnd cannot be smaller than idStart',
+              field: 'idEnd'
+            });
         });
 
         it('should return error on idEnd field when both are given and idStart comes after idEnd', () => {
@@ -281,6 +289,96 @@ describe('[validation] Validation utility', () => {
             .and.deep.include({
               message: 'idEnd cannot be smaller than idStart',
               field: 'idEnd'
+            });
+        });
+      });
+
+      describe('[date]', () => {
+        it('should not return error on field dateStart if it is not given or is given and is before today', () => {
+          criteria.dateStart = null;
+          criteria.dateEnd = null;
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: 'dateStart must be today or before today',
+              field: 'dateStart'
+            });
+
+          criteria.dateStart = new Date('2021-06-12');
+          criteria.dateEnd = null;
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: 'dateStart must be today or before today',
+              field: 'dateStart'
+            });
+        });
+
+        it('should return error on field dateStart if it is given and after today', () => {
+          criteria.dateStart = new Date('2022-01-01');
+          criteria.dateEnd = null;
+
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.deep.include({
+              message: 'dateStart must be today or before today',
+              field: 'dateStart'
+            });
+        });
+
+        it('should not return error on field dateEnd if it is not given or is given and is before today', () => {
+          criteria.dateStart = null;
+          criteria.dateEnd = null;
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: 'dateEnd must be today or before today',
+              field: 'dateEnd'
+            });
+
+          criteria.dateStart = null;
+          criteria.dateEnd = new Date('2021-06-12');
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: 'dateEnd must be today or before today',
+              field: 'dateEnd'
+            });
+        });
+
+        it('should return error on field dateEnd if it is given and after today', () => {
+          criteria.dateStart = null;
+          criteria.dateEnd = new Date('2022-01-01');
+
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.deep.include({
+              message: 'dateEnd must be today or before today',
+              field: 'dateEnd'
+            });
+        });
+
+        it('should not return error on field dateEnd if both are given and are before today but dateEnd is after dateStart', () => {
+          criteria.dateStart = new Date('2021-01-01');
+          criteria.dateEnd = new Date('2021-02-01');
+
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: 'dateEnd cannot be before dateStart',
+              field: 'dateEnd'
+            });
+        });
+
+        it('should return error on field dateEnd if both are given and are before today but dateEnd is before dateStart', () => {
+          criteria.dateStart = new Date('2021-02-01');
+          criteria.dateEnd = new Date('2021-01-01');
+
+          expect(validation.validateRecordFilter(criteria))
+            .to.be.an('array')
+            .and.deep.include({
+              message: 'dateEnd cannot be before dateStart',
+              field: 'dateEnd'
             });
         });
       });
