@@ -64,7 +64,7 @@ export const validateRecordInput: T.ValidateRecordInput = record => {
   }
   if (type !== RecordType.DEBIT && type !== RecordType.CREDIT) {
     errors.push({
-      message: `type must be either ${RecordType.DEBIT} or ${RecordType.CREDIT}`,
+      message: `type must be either '${RecordType.DEBIT}' or '${RecordType.CREDIT}'`,
       field: 'type'
     });
   }

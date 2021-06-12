@@ -4,6 +4,12 @@ import { expect } from 'chai';
 // utils
 import * as validation from './../../src/utils/validation';
 
+// global
+import { RecordType } from '../../src/global/enum';
+
+// types
+import type { RecordInput } from './../../src/global/types';
+
 describe('[validation] Validation utility', () => {
   describe('[User] Validation related to user', () => {
     describe('[password]', () => {
@@ -97,5 +103,122 @@ describe('[validation] Validation utility', () => {
         );
       });
     });
+  });
+
+  describe('[Records] Validation related to records', () => {
+    describe('[record input]', () => {
+      const record: RecordInput = {
+        _id: null,
+        date: new Date('2021-01-01'),
+        amount: 100,
+        type: RecordType.DEBIT,
+        tags: [],
+        description: ''
+      };
+
+      beforeEach(() => {
+        record.date = new Date('2021-01-01');
+        record.amount = 100;
+        record.type = RecordType.DEBIT;
+        record.tags = [];
+        record.description = '';
+      });
+
+      describe('[Date]', () => {
+        it('should not return error on date field when date is today or before today', () => {
+          expect(validation.validateRecordInput(record))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: 'date must be at today or before today',
+              field: 'date'
+            });
+        });
+
+        it('should return error on date field when date is after today', () => {
+          record.date = new Date('2022-01-01');
+
+          expect(validation.validateRecordInput(record))
+            .to.be.an('array')
+            .of.length(1)
+            .and.deep.include({
+              message: 'date must be at today or before today',
+              field: 'date'
+            });
+        });
+      });
+
+      describe('[Amount]', () => {
+        it('should not return error on amount field when amount is greater than 0', () => {
+          expect(validation.validateRecordInput(record))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: 'amount must be greater than 0',
+              field: 'amount'
+            });
+        });
+
+        it('should return error on amount field when amount is 0', () => {
+          record.amount = 0;
+
+          expect(validation.validateRecordInput(record))
+            .to.be.an('array')
+            .of.length(1)
+            .and.deep.include({
+              message: 'amount must be greater than 0',
+              field: 'amount'
+            });
+        });
+
+        it('should return error on amount field when amount is less than 0', () => {
+          record.amount = -1;
+
+          expect(validation.validateRecordInput(record))
+            .to.be.an('array')
+            .of.length(1)
+            .and.deep.include({
+              message: 'amount must be greater than 0',
+              field: 'amount'
+            });
+        });
+      });
+
+      describe('[Tags]', () => {
+        it(`should not return error on type field when type is '${RecordType.DEBIT}'`, () => {
+          expect(validation.validateRecordInput(record))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: `type must be either '${RecordType.DEBIT}' or '${RecordType.CREDIT}'`,
+              field: 'type'
+            });
+        });
+
+        it(`should not return error on type field when type is '${RecordType.CREDIT}'`, () => {
+          record.type = RecordType.CREDIT;
+
+          expect(validation.validateRecordInput(record))
+            .to.be.an('array')
+            .and.not.deep.include({
+              message: `type must be either '${RecordType.DEBIT}' or '${RecordType.CREDIT}'`,
+              field: 'type'
+            });
+        });
+
+        it(`should return error on type field when type is not '${RecordType.DEBIT}' or '${RecordType.DEBIT}'`, () => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+          // @ts-ignore
+          record.type = 'ASD';
+
+          expect(validation.validateRecordInput(record))
+            .to.be.an('array')
+            .of.length(1)
+            .and.deep.include({
+              message: `type must be either '${RecordType.DEBIT}' or '${RecordType.CREDIT}'`,
+              field: 'type'
+            });
+        });
+      });
+    });
+
+    describe('[record filter]', () => {});
   });
 });
