@@ -21,17 +21,16 @@ describe('[commonErrorHandler.test] Common error handler utility', () => {
   it('should throw CustomError with given message and status 500 with empty data field when error is not CustomError and DEV_FEATURE is false', () => {
     const devFeatStub = sinon.stub(env_config, 'DEV_FEATURE').value(false);
 
-    const err = new Error('Test error');
+    const error = new Error('Test error');
 
-    expect(() => commonErrorHandler(err, message))
-      .throws(CustomError)
-      .has.property('message', message);
-    expect(() => commonErrorHandler(err, message))
-      .throws(CustomError)
-      .has.property('status', 500);
-    expect(() => commonErrorHandler(err, message))
-      .throws(CustomError)
-      .to.have.property('data').and.is.empty;
+    try {
+      const response = commonErrorHandler(error, message);
+      expect(response).to.be.undefined;
+    } catch (err) {
+      expect(err).to.have.property('message', message);
+      expect(err).to.have.property('status', 500);
+      expect(err).to.have.property('data').and.is.empty;
+    }
 
     devFeatStub.restore();
   });
@@ -40,20 +39,20 @@ describe('[commonErrorHandler.test] Common error handler utility', () => {
     const devFeatStub = sinon.stub(env_config, 'DEV_FEATURE').value(true);
 
     const errMsg = 'Test error';
-    const err = new Error(errMsg);
+    const error = new Error(errMsg);
 
-    expect(() => commonErrorHandler(err, message))
-      .throws(CustomError)
-      .that.has.property('message', message);
-    expect(() => commonErrorHandler(err, message))
-      .throws(CustomError)
-      .that.has.property('status', 500);
-    expect(() => commonErrorHandler(err, message))
-      .throws(CustomError)
-      .to.have.property('data')
-      .to.be.an('array')
-      .and.to.be.of.length(1)
-      .and.to.deep.include({ message: errMsg });
+    try {
+      const response = commonErrorHandler(error, message);
+      expect(response).to.be.undefined;
+    } catch (err) {
+      expect(err).to.have.property('message', message);
+      expect(err).to.have.property('status', 500);
+      expect(err)
+        .to.have.property('data')
+        .to.be.an('array')
+        .and.to.be.of.length(1)
+        .and.to.deep.include({ message: errMsg });
+    }
 
     devFeatStub.restore();
   });
