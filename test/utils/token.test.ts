@@ -13,7 +13,7 @@ import * as env_config from './../../src/env_config';
 describe('[token] JWT token creator utility', () => {
   const _id = 'Just some id';
 
-  it("should throw CustomError('JWT error' when JWT_SECRET is undefined)", () => {
+  it("should throw CustomError('JWT error') when JWT_SECRET is undefined", () => {
     const jwtSecretStub = stub(env_config, 'JWT_SECRET').value(undefined);
 
     expect(() => encodeIdToJwt(_id))
