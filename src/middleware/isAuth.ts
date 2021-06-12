@@ -50,6 +50,8 @@ export default (req: Request, res: Response, next: NextFunction): void => {
           }
         ])
       );
+
+      return;
     }
 
     const decodedToken = decoded as Token;
