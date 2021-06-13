@@ -4,9 +4,9 @@
   "description": "REST API for Kharcha using GraphQL and MongoDB",
   "main": "./src/index.ts",
   "scripts": {
-    "build:js": "rm -rf dist && tsc",
-    "start": "NODE_PATH=./src nodemon",
+    "build:js": "rm -rf dist && tsc -p tsconfig.build.json ",
     "prod:js": "yarn build:js && NODE_PATH=./dist node ./dist",
+    "start": "NODE_PATH=./src nodemon",
     "prod": "NODE_PATH=./src ts-node ./src/index.ts",
     "test": "NODE_ENV=test NODE_PATH=./src mocha --check-leaks -r ts-node/register -r dotenv/config \"./test/**/*.test.ts\"",
     "test:watch": "NODE_ENV=test NODE_PATH=./src mocha --check-leaks --watch --watch-files ./test --watch-files ./src -r ts-node/register -r dotenv/config \"./test/**/*.test.ts\""
