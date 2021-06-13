@@ -2,6 +2,7 @@
 import { model, Types, Schema } from 'mongoose';
 
 // types
+import type { Model } from 'mongoose';
 import type { IRecord } from './types';
 
 const schema = new Schema<IRecord>({
@@ -39,4 +40,12 @@ const schema = new Schema<IRecord>({
 // Create text index
 schema.index({ description: 'text' });
 
-export default model<IRecord>('Record', schema);
+let Record: Model<IRecord>;
+
+try {
+  Record = model<IRecord>('Record');
+} catch {
+  Record = model<IRecord>('Record', schema);
+}
+
+export default Record;

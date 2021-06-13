@@ -1,8 +1,9 @@
 // packages
-import { Schema, model } from 'mongoose';
+import { model, Schema } from 'mongoose';
 
 // types
 import type { IUser } from './types';
+import type { Model } from 'mongoose';
 
 const schema = new Schema<IUser>({
   username: {
@@ -17,4 +18,12 @@ const schema = new Schema<IUser>({
   tags: { type: [String], required: true, default: [] }
 });
 
-export default model<IUser>('User', schema);
+let User: Model<IUser>;
+
+try {
+  User = model<IUser>('User');
+} catch {
+  User = model<IUser>('User', schema);
+}
+
+export default User;
