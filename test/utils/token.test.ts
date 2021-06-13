@@ -24,7 +24,7 @@ describe('[token] JWT token creator utility', () => {
   });
 
   it('should return the value returned by jwt.sign', () => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const jwtStub = stub(jwt, 'sign').returns(_id);
 

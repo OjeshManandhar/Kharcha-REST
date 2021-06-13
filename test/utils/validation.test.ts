@@ -205,7 +205,7 @@ describe('[validation] Validation utility', () => {
         });
 
         it(`should return error on type field when type is not '${RecordType.DEBIT}' or '${RecordType.DEBIT}'`, () => {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           record.type = 'ASD';
 

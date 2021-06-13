@@ -20,11 +20,13 @@ describe('[isAuth] Authorization middleware', () => {
   const mockRes: Partial<Response> = {};
 
   let mockReq: Partial<Request>;
-  let mockNext: Partial<NextFunction>;
+  let mockNext: NextFunction;
 
   beforeEach(() => {
     mockReq = {};
-    mockNext = () => {};
+    mockNext = () => {
+      return;
+    };
   });
 
   afterEach(() => {
@@ -33,7 +35,7 @@ describe('[isAuth] Authorization middleware', () => {
 
   describe('related to headers', () => {
     it('should call next() and req.isAuth = false when req is {}', () => {
-      mockNext = (args: any) => {
+      mockNext = (args: unknown) => {
         expect(args).to.be.undefined;
 
         expect(mockReq)
@@ -47,7 +49,7 @@ describe('[isAuth] Authorization middleware', () => {
     it('should call next() and req.isAuth = false when req.headers is {}', () => {
       mockReq.headers = {};
 
-      mockNext = (args: any) => {
+      mockNext = (args: unknown) => {
         expect(args).to.be.undefined;
 
         expect(mockReq)
@@ -61,7 +63,7 @@ describe('[isAuth] Authorization middleware', () => {
     it('should call next() and req.isAuth = false when req.headers.authorization is single word', () => {
       mockReq.headers = { authorization: 'Bearer' };
 
-      mockNext = (args: any) => {
+      mockNext = (args: unknown) => {
         expect(args).to.be.undefined;
 
         expect(mockReq)
@@ -81,7 +83,7 @@ describe('[isAuth] Authorization middleware', () => {
 
       mockReq.headers = { authorization: 'Bearer token' };
 
-      mockNext = (args: any) => {
+      mockNext = (args: unknown) => {
         expect(args)
           .to.be.an.instanceOf(CustomError)
           .that.has.property('message', 'JWT error');
@@ -99,7 +101,7 @@ describe('[isAuth] Authorization middleware', () => {
     it("should call next(CustomError('Invalid Token')) and req.isAuth = false when token in invalid", done => {
       mockReq.headers = { authorization: 'Bearer token' };
 
-      mockNext = (args: any) => {
+      mockNext = (args: unknown) => {
         expect(args).to.be.an.instanceOf(CustomError);
         expect(args).to.have.property('message', 'Invalid Token');
         expect(args).to.have.property('status', 401);
@@ -132,7 +134,7 @@ describe('[isAuth] Authorization middleware', () => {
 
       mockReq.headers = { authorization: 'Bearer token' };
 
-      mockNext = (args: any) => {
+      mockNext = (args: unknown) => {
         expect(args).to.be.an.instanceOf(CustomError);
         expect(args).to.have.property('message', 'Invalid Token');
         expect(args).to.have.property('status', 401);
@@ -165,7 +167,7 @@ describe('[isAuth] Authorization middleware', () => {
 
       mockReq.headers = { authorization: 'Bearer token' };
 
-      mockNext = (args: any) => {
+      mockNext = (args: unknown) => {
         expect(args).to.be.an.instanceOf(CustomError);
         expect(args).to.have.property('message', 'Invalid Token');
         expect(args).to.have.property('status', 401);
@@ -194,7 +196,7 @@ describe('[isAuth] Authorization middleware', () => {
 
       mockReq.headers = { authorization: 'Bearer token' };
 
-      mockNext = (args: any) => {
+      mockNext = (args: unknown) => {
         expect(args).to.be.undefined;
 
         expect(mockReq).to.have.property('isAuth', false);
@@ -217,7 +219,7 @@ describe('[isAuth] Authorization middleware', () => {
 
       mockReq.headers = { authorization: 'Bearer token' };
 
-      mockNext = (args: any) => {
+      mockNext = (args: unknown) => {
         expect(args).to.be.undefined;
 
         expect(mockReq).to.have.property('isAuth', true);
