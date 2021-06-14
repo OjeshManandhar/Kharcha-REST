@@ -109,7 +109,9 @@ export const listRecords: T.ListRecords = async (args, req) => {
       throw new CustomError('User not found', 401);
     }
 
-    const foundRecords = await Record.find({ userId: req.userId });
+    const foundRecords = await Record.find({ userId: req.userId }).sort({
+      _id: -1
+    });
 
     return foundRecords.map(rec => {
       const json = rec.toJSON();
@@ -345,7 +347,7 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
       const foundRecords = await Record.find({
         userId: req.userId,
         $and: queryList
-      });
+      }).sort({ _id: -1 });
 
       filterdRecords.push(
         ...foundRecords.map(r => {
@@ -364,7 +366,7 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
         const foundWithoutDesc = await Record.find({
           userId: req.userId,
           $or: queryList
-        });
+        }).sort({ _id: -1 });
 
         const tempWithoutDesc: Array<T.Record> = foundWithoutDesc.map(r => {
           const rec = r.toJSON();
@@ -384,7 +386,7 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
         const foundWithDesc = await Record.find({
           userId: req.userId,
           $text: { $search: description, $caseSensitive: false }
-        });
+        }).sort({ _id: -1 });
 
         const tempWithDesc: Array<T.Record> = foundWithDesc.map(r => {
           const rec = r.toJSON();
