@@ -33,6 +33,7 @@ const schema = buildSchema(`
   }
 `);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 Object.assign((schema as any)._typeMap.Date, DateType);
 
 export default schema;

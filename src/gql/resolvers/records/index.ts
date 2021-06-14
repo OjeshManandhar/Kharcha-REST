@@ -270,6 +270,7 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
       description
     } = criteria;
 
+    // eslint-disable-next-line @typescript-eslint/ban-types
     const queryList: Array<object> = [];
 
     // _id

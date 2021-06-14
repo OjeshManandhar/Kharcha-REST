@@ -1,10 +1,8 @@
 // packages
 import type { Request } from 'express';
-import type { Mongoose } from 'mongoose';
 
 // global
 import type { Record, RecordInput, RecordFilter } from 'global/types';
-import { RecordType, TypeCriteria, FilterCriteria } from 'global/enum';
 
 export type { Record, RecordInput, RecordFilter };
 
