@@ -14,7 +14,7 @@ import CustomError from 'utils/customError';
 
 // types
 import type { Request } from 'express';
-import type { SinonStatic } from 'sinon';
+import type { SinonStub } from 'sinon';
 import type * as T from 'gql/resolvers/users/types';
 
 describe('[users] User resolver', async () => {
@@ -162,12 +162,10 @@ describe('[users] User resolver', async () => {
     });
 
     describe('[DB]', () => {
-      let userFindOneStub: SinonStatic;
+      let userFindOneStub: SinonStub;
 
       beforeEach(() => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        userFindOneStub = sinon.stub(User, 'findOne').returns(undefined);
+        userFindOneStub = sinon.stub(User, 'findOne').resolves(null);
       });
 
       afterEach(() => {
@@ -206,9 +204,7 @@ describe('[users] User resolver', async () => {
       it('should save hashed password to DB', done => {
         const hashedPassword = '1234567890qwertyuiop';
 
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        const bcryptStub = sinon.stub(bcrypt, 'hash').returns(hashedPassword);
+        const bcryptStub = sinon.stub(bcrypt, 'hash').resolves(hashedPassword);
 
         const userSaveStub = sinon
           .stub(User.prototype, 'save')
@@ -225,9 +221,7 @@ describe('[users] User resolver', async () => {
       });
 
       it("should throw CustomError('Could not create') when new user is not saved", done => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        const userSaveStub = sinon.stub(User.prototype, 'save').returns({
+        const userSaveStub = sinon.stub(User.prototype, 'save').resolves({
           username: 'tester',
           password: '1234567890qwertyuiop',
           tags: []
