@@ -2,7 +2,7 @@
 import { expect } from 'chai';
 
 // utils
-import * as validation from './../../src/utils/validation';
+import * as validation from 'utils/validation';
 
 // global
 import {
@@ -12,7 +12,7 @@ import {
 } from '../../src/global/enum';
 
 // types
-import type { RecordInput, RecordFilter } from './../../src/global/types';
+import type { RecordInput, RecordFilter } from 'global/types';
 
 describe('[validation] Validation utility', () => {
   describe('[User] Validation related to user', () => {

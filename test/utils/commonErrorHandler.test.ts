@@ -3,11 +3,11 @@ import { stub } from 'sinon';
 import { expect } from 'chai';
 
 // utils
-import CustomError from './../../src/utils/customError';
-import commonErrorHandler from './../../src/utils/commonErrorHandler';
+import CustomError from 'utils/customError';
+import commonErrorHandler from 'utils/commonErrorHandler';
 
 // env
-import * as env_config from './../../src/env_config';
+import * as env_config from 'env_config';
 
 describe('[commonErrorHandler] Common error handler utility', () => {
   const message = 'Test messsage';

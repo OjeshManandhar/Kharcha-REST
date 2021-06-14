@@ -2,7 +2,7 @@
 import { expect } from 'chai';
 
 // utils
-import CustomError, { ErrorData } from './../../src/utils/customError';
+import CustomError, { ErrorData } from 'utils/customError';
 
 describe('[customError] Custom Error class utility', () => {
   it('should return all default fields with nothing is passed', () => {

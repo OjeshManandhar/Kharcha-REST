@@ -4,11 +4,11 @@ import { expect } from 'chai';
 import jwt from 'jsonwebtoken';
 
 // utils
-import CustomError from './../../src/utils/customError';
-import { encodeIdToJwt } from './../../src/utils/token';
+import CustomError from 'utils/customError';
+import { encodeIdToJwt } from 'utils/token';
 
 // env
-import * as env_config from './../../src/env_config';
+import * as env_config from 'env_config';
 
 describe('[token] JWT token creator utility', () => {
   const _id = 'Just some id';

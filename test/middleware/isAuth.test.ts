@@ -5,13 +5,13 @@ import { Types } from 'mongoose';
 import jwt, { TokenExpiredError } from 'jsonwebtoken';
 
 // utils
-import CustomError from './../../src/utils/customError';
+import CustomError from 'utils/customError';
 
 // middleware
-import isAuth from './../../src/middleware/isAuth';
+import isAuth from 'middleware/isAuth';
 
 // env
-import * as env_config from './../../src/env_config';
+import * as env_config from 'env_config';
 
 // types
 import type { Request, Response, NextFunction } from 'express';
