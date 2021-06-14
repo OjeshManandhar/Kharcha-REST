@@ -1,5 +1,6 @@
 // packages
 import sinon from 'sinon';
+import bcrypt from 'bcryptjs';
 import { expect } from 'chai';
 
 // model
@@ -13,6 +14,7 @@ import CustomError from 'utils/customError';
 
 // types
 import type { Request } from 'express';
+import type { SinonStatic } from 'sinon';
 import type * as T from 'gql/resolvers/users/types';
 
 describe('[users] User resolver', async () => {
@@ -160,7 +162,23 @@ describe('[users] User resolver', async () => {
     });
 
     describe('[DB]', () => {
+      let userFindOneStub: SinonStatic;
+
+      beforeEach(() => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        userFindOneStub = sinon.stub(User, 'findOne').returns(undefined);
+      });
+
+      afterEach(() => {
+        userFindOneStub.restore();
+      });
+
       it("should throw CustomError('User already exists') when username is already used", done => {
+        // To clear the stub of this group for this test only
+        userFindOneStub.restore();
+
+        // Create new stub for this test
         const userStub = sinon.stub(User, 'findOne').returnsArg(0);
 
         users
@@ -185,11 +203,28 @@ describe('[users] User resolver', async () => {
           });
       });
 
-      it("should throw CustomError('Could not create') when new user is not saved", done => {
+      it('should save hashed password to DB', done => {
+        const hashedPassword = '1234567890qwertyuiop';
+
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        const userFindOneStub = sinon.stub(User, 'findOne').returns(undefined);
+        const bcryptStub = sinon.stub(bcrypt, 'hash').returns(hashedPassword);
 
+        const userSaveStub = sinon
+          .stub(User.prototype, 'save')
+          .callsFake(function (this: unknown) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            expect((this as any).password).to.equal(hashedPassword);
+
+            done();
+            userSaveStub.restore();
+            bcryptStub.restore();
+          });
+
+        users.createUser(mockArgs, mockReq as Request);
+      });
+
+      it("should throw CustomError('Could not create') when new user is not saved", done => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const userSaveStub = sinon.stub(User.prototype, 'save').returns({
@@ -204,7 +239,6 @@ describe('[users] User resolver', async () => {
             expect(result).to.be.undefined;
 
             done();
-            userFindOneStub.restore();
             userSaveStub.restore();
           })
           .catch(err => {
@@ -214,7 +248,6 @@ describe('[users] User resolver', async () => {
             expect(err).to.have.property('data').to.be.empty;
 
             done();
-            userFindOneStub.restore();
             userSaveStub.restore();
           });
       });
