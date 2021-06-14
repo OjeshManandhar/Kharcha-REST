@@ -11,6 +11,7 @@ import * as users from 'gql/resolvers/users';
 
 // utils
 import CustomError from 'utils/customError';
+import * as Token from 'utils/token';
 
 // types
 import type { Request } from 'express';
@@ -19,6 +20,8 @@ import type * as T from 'gql/resolvers/users/types';
 
 describe('[users] User resolver', async () => {
   describe('[createUser]', () => {
+    let userFindOneStub: SinonStub;
+
     const mockReq: Partial<Request> = {};
     const mockArgs: T.CreateUserArgs = {
       username: 'test',
@@ -27,13 +30,18 @@ describe('[users] User resolver', async () => {
     };
 
     beforeEach(() => {
+      userFindOneStub = sinon.stub(User, 'findOne').resolves(null);
+
       mockReq.isAuth = false;
 
       mockArgs.username = 'test';
       mockArgs.password = 'password';
       mockArgs.confirmPassword = 'password';
+    });
 
+    afterEach(() => {
       sinon.restore();
+      userFindOneStub.restore();
     });
 
     describe('[auth]', () => {
@@ -162,16 +170,6 @@ describe('[users] User resolver', async () => {
     });
 
     describe('[DB]', () => {
-      let userFindOneStub: SinonStub;
-
-      beforeEach(() => {
-        userFindOneStub = sinon.stub(User, 'findOne').resolves(null);
-      });
-
-      afterEach(() => {
-        userFindOneStub.restore();
-      });
-
       it("should throw CustomError('User already exists') when username is already used", done => {
         // To clear the stub of this group for this test only
         userFindOneStub.restore();
@@ -243,6 +241,73 @@ describe('[users] User resolver', async () => {
 
             done();
             userSaveStub.restore();
+          });
+      });
+    });
+
+    describe('[return value]', () => {
+      it('should return _id and username as given by .save()', done => {
+        const dummyData = {
+          _id: '',
+          username: 'dummy username'
+        };
+
+        const userSaveStub = sinon
+          .stub(User.prototype, 'save')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .callsFake(function (this: { [index: string]: any }) {
+            /**
+             * Could not change this._id so changeng
+             * dummyData._id to this._id.toString()
+             * as creatueUser() will retirn _id as string
+             */
+            dummyData._id = this._id.toString();
+            this.username = dummyData.username;
+
+            return this;
+          });
+
+        users
+          .createUser(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.have.property('_id', dummyData._id);
+            expect(result).to.have.property('username', dummyData.username);
+
+            done();
+            userSaveStub.restore();
+          })
+          .catch(err => {
+            expect(err).to.be.undefined;
+
+            done();
+            userSaveStub.restore();
+          });
+      });
+
+      it('should return token given by encodeIdToJwt', done => {
+        const dummyToken = '1234567890.qwertyuiop';
+
+        const userSaveStub = sinon.stub(User.prototype, 'save').resolvesThis();
+
+        const encodeIdToJwtStub = sinon
+          .stub(Token, 'encodeIdToJwt')
+          .returns(dummyToken);
+
+        users
+          .createUser(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.haveOwnProperty('token', dummyToken);
+
+            done();
+            userSaveStub.restore();
+            encodeIdToJwtStub.restore();
+          })
+          .catch(err => {
+            expect(err).to.be.undefined;
+
+            done();
+            userSaveStub.restore();
+            encodeIdToJwtStub.restore();
           });
       });
     });
