@@ -492,8 +492,29 @@ describe('[users] User resolver', async () => {
     });
 
     describe('[atuh]', () => {
-      it("should throw CustomError('Unauthorized. Log out first', 401) if not logged in", () => {
+      it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = false i.e. not logged in", () => {
         mockReq.isAuth = false;
+        mockReq.userId = '123456789012';
+
+        return users
+          .changePassword(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property(
+              'message',
+              'Unauthorized. Log in first'
+            );
+            expect(err).to.have.property('status', 401);
+            expect(err).to.have.property('data').that.is.empty;
+          });
+      });
+
+      it("should throw CustomError('Unauthorized. Log out first', 401) if req.uesrId is falsy i.e. not logged in", () => {
+        mockReq.isAuth = true;
+        mockReq.userId = undefined;
 
         return users
           .changePassword(mockArgs, mockReq as Request)
