@@ -517,4 +517,50 @@ describe('[users] User resolver', async () => {
       });
     });
   });
+
+  describe('[changePassword]', () => {
+    const mockReq: Partial<Request> = {
+      isAuth: true,
+      userId: '123456789012'
+    };
+    const mockArgs: T.ChangePasswordArgs = {
+      oldPassword: 'password',
+      newPassword: 'qwertyuiop',
+      confirmNewPassword: 'qwertyuiop'
+    };
+
+    beforeEach(() => {
+      mockReq.isAuth = true;
+      mockReq.userId = '123456789012';
+
+      mockArgs.oldPassword = 'password';
+      mockArgs.newPassword = 'qwertyuiop';
+      mockArgs.confirmNewPassword = 'qwertyuiop';
+    });
+
+    describe('[atuh]', () => {
+      it("should throw CustomError('Unauthorized. Log out first', 401) if not logged in", done => {
+        mockReq.isAuth = false;
+
+        users
+          .changePassword(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+
+            done();
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property(
+              'message',
+              'Unauthorized. Log in first'
+            );
+            expect(err).to.have.property('status', 401);
+            expect(err).to.have.property('data').that.is.empty;
+
+            done();
+          });
+      });
+    });
+  });
 });
