@@ -312,4 +312,209 @@ describe('[users] User resolver', async () => {
       });
     });
   });
+
+  describe('[login]', () => {
+    const mockReq: Partial<Request> = {};
+    const mockArgs: T.LoginArgs = {
+      username: 'test',
+      password: 'password'
+    };
+
+    beforeEach(() => {
+      mockReq.isAuth = false;
+
+      mockArgs.username = 'test';
+      mockArgs.password = 'password';
+    });
+
+    afterEach(() => {
+      sinon.restore();
+    });
+
+    describe('[auth]', () => {
+      it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = true i.e. logged in", done => {
+        mockReq.isAuth = true;
+
+        users
+          .login(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+
+            done();
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property(
+              'message',
+              'Unauthorized. Log out first'
+            );
+            expect(err).to.have.property('status', 401);
+            expect(err).to.have.property('data').that.is.empty;
+
+            done();
+          });
+      });
+    });
+
+    describe('[input validation]', () => {
+      it("should throw CustomError('Invalid Input') when username to is too short", done => {
+        mockArgs.username = 'asd';
+
+        users
+          .login(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+
+            done();
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property('message', 'Invalid Input');
+            expect(err).to.have.property('status', 422);
+            expect(err).to.have.property('data').that.deep.include({
+              message: 'Username must of length 4 to 15 characters',
+              field: 'username'
+            });
+
+            done();
+          });
+      });
+
+      it("should throw CustomError('Invalid Input') when username to is too long", done => {
+        mockArgs.username = '1234567890123456';
+
+        users
+          .login(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+
+            done();
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property('message', 'Invalid Input');
+            expect(err).to.have.property('status', 422);
+            expect(err).to.have.property('data').that.deep.include({
+              message: 'Username must of length 4 to 15 characters',
+              field: 'username'
+            });
+
+            done();
+          });
+      });
+
+      it("should throw CustomError('Invalid Input') when password is too short", done => {
+        mockArgs.password = '1234567';
+
+        users
+          .login(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+
+            done();
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property('message', 'Invalid Input');
+            expect(err).to.have.property('status', 422);
+            expect(err).to.have.property('data').that.deep.include({
+              message: 'Password must be at least 8 characters',
+              field: 'password'
+            });
+
+            done();
+          });
+      });
+    });
+
+    describe('[DB]', () => {
+      it("should throw CustomError('Incorrect username or password', 401) when username is not found", done => {
+        const userStub = sinon.stub(User, 'findOne').resolves(null);
+
+        users
+          .login(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+
+            done();
+            userStub.restore();
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property(
+              'message',
+              'Incorrect username or password'
+            );
+            expect(err).to.have.property('status', 401);
+
+            done();
+            userStub.restore();
+          });
+      });
+
+      it("should throw CustomError('Incorrect username or password', 401) when password doesn't match", done => {
+        const userStub = sinon.stub(User, 'findOne').resolvesThis();
+
+        const bcryptStub = sinon.stub(bcrypt, 'compare').resolves(false);
+
+        users
+          .login(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+
+            done();
+            userStub.restore();
+            bcryptStub.restore();
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property(
+              'message',
+              'Incorrect username or password'
+            );
+            expect(err).to.have.property('status', 401);
+
+            done();
+            userStub.restore();
+            bcryptStub.restore();
+          });
+      });
+    });
+
+    describe('[return value]', () => {
+      it('should return token given by encodeIdToJwt', done => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const userStub = sinon.stub(User, 'findOne').resolves({
+          _id: { id: '1234567890' }
+        });
+
+        const bcryptStub = sinon.stub(bcrypt, 'compare').resolves(true);
+
+        const dummyToken = '1234567890.qwertyuiop';
+        const encodeIdToJwtStub = sinon
+          .stub(Token, 'encodeIdToJwt')
+          .returns(dummyToken);
+
+        users
+          .login(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.haveOwnProperty('token', dummyToken);
+
+            done();
+            userStub.restore();
+            bcryptStub.restore();
+            encodeIdToJwtStub.restore();
+          })
+          .catch(err => {
+            expect(err).to.be.undefined;
+
+            done();
+            userStub.restore();
+            bcryptStub.restore();
+            encodeIdToJwtStub.restore();
+          });
+      });
+    });
+  });
 });
