@@ -70,38 +70,30 @@ describe('[users] User resolver', async () => {
     });
 
     describe('[input validation]', () => {
-      it("should throw CustomError('Invalid Input') when username to is too short", done => {
+      it("should throw CustomError('Invalid Input') when username to is too short", async () => {
         mockArgs.username = 'asd';
 
-        users
-          .createUser(mockArgs, mockReq as Request)
-          .then(result => {
-            expect(result).to.be.undefined;
-
-            done();
-          })
-          .catch(err => {
-            expect(err).to.be.instanceOf(CustomError);
-            expect(err).to.have.property('message', 'Invalid Input');
-            expect(err).to.have.property('status', 422);
-            expect(err).to.have.property('data').that.deep.include({
-              message: 'Username must of length 4 to 15 characters',
-              field: 'username'
-            });
-
-            done();
+        try {
+          const result = await users.createUser(mockArgs, mockReq as Request);
+          expect(result).to.be.undefined;
+        } catch (err) {
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Invalid Input');
+          expect(err).to.have.property('status', 422);
+          expect(err).to.have.property('data').that.deep.include({
+            message: 'Username must of length 4 to 15 characters',
+            field: 'username'
           });
+        }
       });
 
-      it("should throw CustomError('Invalid Input') when username to is too long", done => {
+      it("should throw CustomError('Invalid Input') when username to is too long", () => {
         mockArgs.username = '1234567890123456';
 
-        users
+        return users
           .createUser(mockArgs, mockReq as Request)
           .then(result => {
             expect(result).to.be.undefined;
-
-            done();
           })
           .catch(err => {
             expect(err).to.be.instanceOf(CustomError);
@@ -111,21 +103,17 @@ describe('[users] User resolver', async () => {
               message: 'Username must of length 4 to 15 characters',
               field: 'username'
             });
-
-            done();
           });
       });
 
-      it("should throw CustomError('Invalid Input') when password and confirmPassword are not same", done => {
+      it("should throw CustomError('Invalid Input') when password and confirmPassword are not same", () => {
         mockArgs.password = 'password';
         mockArgs.confirmPassword = 'confirmPassword';
 
-        users
+        return users
           .createUser(mockArgs, mockReq as Request)
           .then(result => {
             expect(result).to.be.undefined;
-
-            done();
           })
           .catch(err => {
             expect(err).to.be.instanceOf(CustomError);
@@ -135,21 +123,17 @@ describe('[users] User resolver', async () => {
               message: 'Confirm Password does not match Password',
               field: 'confirmPassword'
             });
-
-            done();
           });
       });
 
-      it("should throw CustomError('Invalid Input') when password and confirmPassowrd are too short", done => {
+      it("should throw CustomError('Invalid Input') when password and confirmPassowrd are too short", () => {
         mockArgs.password = '1234567';
         mockArgs.confirmPassword = '1234567';
 
-        users
+        return users
           .createUser(mockArgs, mockReq as Request)
           .then(result => {
             expect(result).to.be.undefined;
-
-            done();
           })
           .catch(err => {
             expect(err).to.be.instanceOf(CustomError);
@@ -163,26 +147,23 @@ describe('[users] User resolver', async () => {
               message: 'Confirm Password must be at least 8 characters',
               field: 'confirmPassword'
             });
-
-            done();
           });
       });
     });
 
     describe('[DB]', () => {
-      it("should throw CustomError('User already exists') when username is already used", done => {
+      it("should throw CustomError('User already exists') when username is already used", () => {
         // To clear the stub of this group for this test only
         userFindOneStub.restore();
 
         // Create new stub for this test
         const userStub = sinon.stub(User, 'findOne').returnsArg(0);
 
-        users
+        return users
           .createUser(mockArgs, mockReq as Request)
           .then(result => {
             expect(result).to.be.undefined;
 
-            done();
             userStub.restore();
           })
           .catch(err => {
@@ -194,7 +175,6 @@ describe('[users] User resolver', async () => {
               field: 'username'
             });
 
-            done();
             userStub.restore();
           });
       });
@@ -207,30 +187,30 @@ describe('[users] User resolver', async () => {
         const userSaveStub = sinon
           .stub(User.prototype, 'save')
           .callsFake(function (this: unknown) {
+            // will give timeout error when this fails
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             expect((this as any).password).to.equal(hashedPassword);
 
             done();
-            userSaveStub.restore();
             bcryptStub.restore();
+            userSaveStub.restore();
           });
 
         users.createUser(mockArgs, mockReq as Request);
       });
 
-      it("should throw CustomError('Could not create') when new user is not saved", done => {
+      it("should throw CustomError('Could not create') when new user is not saved", () => {
         const userSaveStub = sinon.stub(User.prototype, 'save').resolves({
           username: 'tester',
           password: '1234567890qwertyuiop',
           tags: []
         });
 
-        users
+        return users
           .createUser(mockArgs, mockReq as Request)
           .then(result => {
             expect(result).to.be.undefined;
 
-            done();
             userSaveStub.restore();
           })
           .catch(err => {
@@ -239,14 +219,13 @@ describe('[users] User resolver', async () => {
             expect(err).to.have.property('status', 500);
             expect(err).to.have.property('data').to.be.empty;
 
-            done();
             userSaveStub.restore();
           });
       });
     });
 
     describe('[return value]', () => {
-      it('should return _id and username as given by .save()', done => {
+      it('should return _id and username as given by .save()', () => {
         const dummyData = {
           _id: '',
           username: 'dummy username'
@@ -267,24 +246,22 @@ describe('[users] User resolver', async () => {
             return this;
           });
 
-        users
+        return users
           .createUser(mockArgs, mockReq as Request)
           .then(result => {
             expect(result).to.have.property('_id', dummyData._id);
             expect(result).to.have.property('username', dummyData.username);
 
-            done();
             userSaveStub.restore();
           })
           .catch(err => {
             expect(err).to.be.undefined;
 
-            done();
             userSaveStub.restore();
           });
       });
 
-      it('should return token given by encodeIdToJwt', done => {
+      it('should return token given by encodeIdToJwt', () => {
         const dummyToken = '1234567890.qwertyuiop';
 
         const userSaveStub = sinon.stub(User.prototype, 'save').resolvesThis();
@@ -293,19 +270,17 @@ describe('[users] User resolver', async () => {
           .stub(Token, 'encodeIdToJwt')
           .returns(dummyToken);
 
-        users
+        return users
           .createUser(mockArgs, mockReq as Request)
           .then(result => {
             expect(result).to.haveOwnProperty('token', dummyToken);
 
-            done();
             userSaveStub.restore();
             encodeIdToJwtStub.restore();
           })
           .catch(err => {
             expect(err).to.be.undefined;
 
-            done();
             userSaveStub.restore();
             encodeIdToJwtStub.restore();
           });
@@ -332,15 +307,13 @@ describe('[users] User resolver', async () => {
     });
 
     describe('[auth]', () => {
-      it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = true i.e. logged in", done => {
+      it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = true i.e. logged in", () => {
         mockReq.isAuth = true;
 
-        users
+        return users
           .login(mockArgs, mockReq as Request)
           .then(result => {
             expect(result).to.be.undefined;
-
-            done();
           })
           .catch(err => {
             expect(err).to.be.instanceOf(CustomError);
@@ -350,22 +323,18 @@ describe('[users] User resolver', async () => {
             );
             expect(err).to.have.property('status', 401);
             expect(err).to.have.property('data').that.is.empty;
-
-            done();
           });
       });
     });
 
     describe('[input validation]', () => {
-      it("should throw CustomError('Invalid Input') when username to is too short", done => {
+      it("should throw CustomError('Invalid Input') when username to is too short", () => {
         mockArgs.username = 'asd';
 
-        users
+        return users
           .login(mockArgs, mockReq as Request)
           .then(result => {
             expect(result).to.be.undefined;
-
-            done();
           })
           .catch(err => {
             expect(err).to.be.instanceOf(CustomError);
@@ -375,20 +344,16 @@ describe('[users] User resolver', async () => {
               message: 'Username must of length 4 to 15 characters',
               field: 'username'
             });
-
-            done();
           });
       });
 
-      it("should throw CustomError('Invalid Input') when username to is too long", done => {
+      it("should throw CustomError('Invalid Input') when username to is too long", () => {
         mockArgs.username = '1234567890123456';
 
-        users
+        return users
           .login(mockArgs, mockReq as Request)
           .then(result => {
             expect(result).to.be.undefined;
-
-            done();
           })
           .catch(err => {
             expect(err).to.be.instanceOf(CustomError);
@@ -398,20 +363,16 @@ describe('[users] User resolver', async () => {
               message: 'Username must of length 4 to 15 characters',
               field: 'username'
             });
-
-            done();
           });
       });
 
-      it("should throw CustomError('Invalid Input') when password is too short", done => {
+      it("should throw CustomError('Invalid Input') when password is too short", () => {
         mockArgs.password = '1234567';
 
-        users
+        return users
           .login(mockArgs, mockReq as Request)
           .then(result => {
             expect(result).to.be.undefined;
-
-            done();
           })
           .catch(err => {
             expect(err).to.be.instanceOf(CustomError);
@@ -421,22 +382,19 @@ describe('[users] User resolver', async () => {
               message: 'Password must be at least 8 characters',
               field: 'password'
             });
-
-            done();
           });
       });
     });
 
     describe('[DB]', () => {
-      it("should throw CustomError('Incorrect username or password', 401) when username is not found", done => {
+      it("should throw CustomError('Incorrect username or password', 401) when username is not found", () => {
         const userStub = sinon.stub(User, 'findOne').resolves(null);
 
-        users
+        return users
           .login(mockArgs, mockReq as Request)
           .then(result => {
             expect(result).to.be.undefined;
 
-            done();
             userStub.restore();
           })
           .catch(err => {
@@ -447,22 +405,20 @@ describe('[users] User resolver', async () => {
             );
             expect(err).to.have.property('status', 401);
 
-            done();
             userStub.restore();
           });
       });
 
-      it("should throw CustomError('Incorrect username or password', 401) when password doesn't match", done => {
+      it("should throw CustomError('Incorrect username or password', 401) when password doesn't match", () => {
         const userStub = sinon.stub(User, 'findOne').resolvesThis();
 
         const bcryptStub = sinon.stub(bcrypt, 'compare').resolves(false);
 
-        users
+        return users
           .login(mockArgs, mockReq as Request)
           .then(result => {
             expect(result).to.be.undefined;
 
-            done();
             userStub.restore();
             bcryptStub.restore();
           })
@@ -474,7 +430,6 @@ describe('[users] User resolver', async () => {
             );
             expect(err).to.have.property('status', 401);
 
-            done();
             userStub.restore();
             bcryptStub.restore();
           });
@@ -482,7 +437,7 @@ describe('[users] User resolver', async () => {
     });
 
     describe('[return value]', () => {
-      it('should return token given by encodeIdToJwt', done => {
+      it('should return token given by encodeIdToJwt', () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const userStub = sinon.stub(User, 'findOne').resolves({
@@ -496,12 +451,11 @@ describe('[users] User resolver', async () => {
           .stub(Token, 'encodeIdToJwt')
           .returns(dummyToken);
 
-        users
+        return users
           .login(mockArgs, mockReq as Request)
           .then(result => {
             expect(result).to.haveOwnProperty('token', dummyToken);
 
-            done();
             userStub.restore();
             bcryptStub.restore();
             encodeIdToJwtStub.restore();
@@ -509,7 +463,6 @@ describe('[users] User resolver', async () => {
           .catch(err => {
             expect(err).to.be.undefined;
 
-            done();
             userStub.restore();
             bcryptStub.restore();
             encodeIdToJwtStub.restore();
@@ -539,15 +492,13 @@ describe('[users] User resolver', async () => {
     });
 
     describe('[atuh]', () => {
-      it("should throw CustomError('Unauthorized. Log out first', 401) if not logged in", done => {
+      it("should throw CustomError('Unauthorized. Log out first', 401) if not logged in", () => {
         mockReq.isAuth = false;
 
-        users
+        return users
           .changePassword(mockArgs, mockReq as Request)
           .then(result => {
             expect(result).to.be.undefined;
-
-            done();
           })
           .catch(err => {
             expect(err).to.be.instanceOf(CustomError);
@@ -557,8 +508,6 @@ describe('[users] User resolver', async () => {
             );
             expect(err).to.have.property('status', 401);
             expect(err).to.have.property('data').that.is.empty;
-
-            done();
           });
       });
     });
