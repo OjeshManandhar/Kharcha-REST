@@ -491,6 +491,10 @@ describe('[users] User resolver', async () => {
       mockArgs.confirmNewPassword = 'qwertyuiop';
     });
 
+    afterEach(() => {
+      sinon.restore();
+    });
+
     describe('[atuh]', () => {
       it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = false i.e. not logged in", () => {
         mockReq.isAuth = false;
@@ -529,6 +533,91 @@ describe('[users] User resolver', async () => {
             );
             expect(err).to.have.property('status', 401);
             expect(err).to.have.property('data').that.is.empty;
+          });
+      });
+    });
+
+    describe('[input validation]', () => {
+      it("should throw CustomError('Invalid Input') when oldPassword is too short", () => {
+        mockArgs.oldPassword = '1234567';
+
+        return users
+          .changePassword(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property('message', 'Invalid Input');
+            expect(err).to.have.property('status', 422);
+            expect(err).to.have.property('data').that.deep.include({
+              message: 'Old Password must be at least 8 characters',
+              field: 'oldPassword'
+            });
+          });
+      });
+
+      it("should throw CustomError('Invalid Input') when oldPassword and newPassword are same", () => {
+        mockArgs.oldPassword = '1234567';
+        mockArgs.newPassword = mockArgs.oldPassword;
+
+        return users
+          .changePassword(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property('message', 'Invalid Input');
+            expect(err).to.have.property('status', 422);
+            expect(err).to.have.property('data').that.deep.include({
+              message: 'New Password cannot be same as Old Password',
+              field: 'newPassword'
+            });
+          });
+      });
+
+      it("should throw CustomError('Invalid Input') when newPassword and confirmNewPassword are not same", () => {
+        mockArgs.newPassword = 'new password';
+        mockArgs.confirmNewPassword = 'confirm new password';
+
+        return users
+          .changePassword(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property('message', 'Invalid Input');
+            expect(err).to.have.property('status', 422);
+            expect(err).to.have.property('data').that.deep.include({
+              message: 'Confirm New Password does not match New Password',
+              field: 'confirmNewPassword'
+            });
+          });
+      });
+
+      it("should throw CustomError('Invalid Input') when newPassword and confirmNewPassword are too short", () => {
+        mockArgs.newPassword = '1234567';
+        mockArgs.confirmNewPassword = '1234567';
+
+        return users
+          .changePassword(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property('message', 'Invalid Input');
+            expect(err).to.have.property('status', 422);
+            expect(err).to.have.property('data').that.deep.include({
+              message: 'New Password must be at least 8 characters',
+              field: 'newPassword'
+            });
+            expect(err).to.have.property('data').that.deep.include({
+              message: 'Confirm New Password must be at least 8 characters',
+              field: 'confirmNewPassword'
+            });
           });
       });
     });
