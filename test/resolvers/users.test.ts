@@ -471,6 +471,18 @@ describe('[users] User resolver', async () => {
   });
 
   describe('[changePassword]', () => {
+    // Override cannot override properties which are not function, I think
+    const userInstance = {
+      ...sinon.createStubInstance<IUser>(User, {}),
+      _id: '123456789012',
+      username: 'test',
+      password: 'password',
+      tags: [],
+      save: function () {
+        return this;
+      }
+    };
+
     let userFindByIdStub: SinonStub;
     let bcryptcompareStub: SinonStub;
 
@@ -491,12 +503,7 @@ describe('[users] User resolver', async () => {
         .stub(User, 'findById')
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        .resolves({
-          _id: '123456789012',
-          username: 'test',
-          password: 'password',
-          tags: []
-        });
+        .resolves(userInstance);
 
       mockReq.isAuth = true;
       mockReq.userId = '123456789012';
@@ -685,41 +692,61 @@ describe('[users] User resolver', async () => {
       });
 
       it('should save hashed password to DB', done => {
-        // restore for this test
-        userFindByIdStub.restore();
-
         const hashedPassword = '1234567890qwertyuiop';
 
-        // Override cannot override properties which are not function, I think
-        const newUserInstanceStub = sinon.createStubInstance<IUser>(User, {
+        const bcryptStub = sinon.stub(bcrypt, 'hash').resolves(hashedPassword);
+
+        const userInstanceStub = sinon
+          .stub(userInstance, 'save')
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          save: sinon.stub().callsFake(function (this: unknown) {
+          .callsFake(function (this: unknown) {
             // will give timeout error when this fails
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             expect((this as any).password).to.equal(hashedPassword);
 
             done();
-            userStub.restore();
             bcryptStub.restore();
-          })
-        });
-
-        const userStub = sinon
-          .stub(User, 'findById')
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          .resolves({
-            ...newUserInstanceStub,
-            _id: '123456789012',
-            username: 'test',
-            password: 'password',
-            tags: []
+            userInstanceStub.restore();
           });
 
-        const bcryptStub = sinon.stub(bcrypt, 'hash').resolves(hashedPassword);
-
         users.changePassword(mockArgs, mockReq as Request);
+      });
+
+      it("should throw CustomError('Could not change password') when pssword change is not saved", () => {
+        const userInstanceStub = sinon.stub(userInstance, 'save').resolves({});
+
+        return users
+          .changePassword(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+
+            userInstanceStub.restore();
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property(
+              'message',
+              'Could not change password'
+            );
+            expect(err).to.have.property('status', 500);
+            expect(err).to.have.property('data').to.be.empty;
+
+            userInstanceStub.restore();
+          });
+      });
+    });
+
+    describe('[return value]', () => {
+      it('should return true when pssword change is saved', () => {
+        return users
+          .changePassword(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.true;
+          })
+          .catch(err => {
+            expect(err).to.be.undefined;
+          });
       });
     });
   });
