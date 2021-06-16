@@ -4,14 +4,17 @@ import type { Request } from 'express';
 export type AddTags = (
   args: { tags: Array<string> },
   req: Request
-) => Promist<Array<string>>;
+) => Promise<Array<string> | undefined>;
 
-export type ListTags = (args: unknown, req: Request) => Promist<Array<string>>;
+export type ListTags = (
+  args: unknown,
+  req: Request
+) => Promise<Array<string> | undeinfed>;
 
 export type SearchTags = (
   args: { tag: string },
   req: Request
-) => Promist<Array<string>>;
+) => Promise<Array<string> | undefined>;
 
 export type EditTag = (
   args: { oldTag: string; newTag: string },
@@ -21,4 +24,4 @@ export type EditTag = (
 export type DeleteTags = (
   args: { tags: Array<string> },
   req: Request
-) => Promist<Array<string>>;
+) => Promise<Array<string> | undefined>;
