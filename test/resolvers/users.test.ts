@@ -2,22 +2,24 @@
 import sinon from 'sinon';
 import bcrypt from 'bcryptjs';
 import { expect } from 'chai';
-import type { Request } from 'express';
-import type { SinonStub } from 'sinon';
 
 // model
 import User from 'models/user';
-import type { IUser } from 'models/user/types';
 
 // gql
 import * as users from 'gql/resolvers/users';
-import type * as T from 'gql/resolvers/users/types';
 
 // utils
-import CustomError from 'utils/customError';
 import * as Token from 'utils/token';
+import CustomError from 'utils/customError';
 
-describe('[users] User resolver', async () => {
+// types
+import type { Request } from 'express';
+import type { SinonStub } from 'sinon';
+import type * as T from 'gql/resolvers/users/types';
+import type { IUser } from 'models/user/types';
+
+describe('[users] User resolver', () => {
   describe('[createUser]', () => {
     let bcryptHashStub: SinonStub;
     let userFindOneStub: SinonStub;
@@ -747,6 +749,109 @@ describe('[users] User resolver', async () => {
           })
           .catch(err => {
             expect(err).to.be.undefined;
+          });
+      });
+    });
+  });
+
+  describe('[deleteUser]', () => {
+    const mockReq: Partial<Request> = {
+      isAuth: true,
+      userId: '123456789012'
+    };
+
+    beforeEach(() => {
+      mockReq.isAuth = true;
+      mockReq.userId = '123456789012';
+    });
+
+    afterEach(() => {
+      sinon.restore();
+    });
+
+    describe('[atuh]', () => {
+      it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = false i.e. not logged in", () => {
+        mockReq.isAuth = false;
+        mockReq.userId = '123456789012';
+
+        return users
+          .deleteUser({}, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property(
+              'message',
+              'Unauthorized. Log in first'
+            );
+            expect(err).to.have.property('status', 401);
+            expect(err).to.have.property('data').that.is.empty;
+          });
+      });
+
+      it("should throw CustomError('Unauthorized. Log out first', 401) if req.uesrId is falsy i.e. not logged in", () => {
+        mockReq.isAuth = true;
+        mockReq.userId = undefined;
+
+        return users
+          .deleteUser({}, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property(
+              'message',
+              'Unauthorized. Log in first'
+            );
+            expect(err).to.have.property('status', 401);
+            expect(err).to.have.property('data').that.is.empty;
+          });
+      });
+    });
+
+    describe('[DB]', () => {
+      it("should throw CustomError('User not found') if nothing is deleted", () => {
+        const userStub = sinon.stub(User, 'deleteOne').resolves({
+          deletedCount: 0
+        });
+
+        return users
+          .deleteUser({}, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+
+            userStub.restore();
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property('message', 'User not found');
+            expect(err).to.have.property('status', 500);
+            expect(err).to.have.property('data').that.is.empty;
+
+            userStub.restore();
+          });
+      });
+    });
+
+    describe('[return value]', () => {
+      it('should return true if user is deleted', () => {
+        const userStub = sinon.stub(User, 'deleteOne').resolves({
+          deletedCount: 1
+        });
+
+        return users
+          .deleteUser({}, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.true;
+
+            userStub.restore();
+          })
+          .catch(err => {
+            expect(err).to.be.undefined;
+
+            userStub.restore();
           });
       });
     });
