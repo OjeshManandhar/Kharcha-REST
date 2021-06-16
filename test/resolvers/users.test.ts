@@ -19,7 +19,10 @@ import * as Token from 'utils/token';
 
 describe('[users] User resolver', async () => {
   describe('[createUser]', () => {
+    let bcryptHashStub: SinonStub;
     let userFindOneStub: SinonStub;
+
+    const hashedPassword = '1234567890qwertyuiop';
 
     const mockReq: Partial<Request> = {};
     const mockArgs: T.CreateUserArgs = {
@@ -29,6 +32,8 @@ describe('[users] User resolver', async () => {
     };
 
     beforeEach(() => {
+      bcryptHashStub = sinon.stub(bcrypt, 'hash').resolves(hashedPassword);
+
       userFindOneStub = sinon.stub(User, 'findOne').resolves(null);
 
       mockReq.isAuth = false;
@@ -40,6 +45,7 @@ describe('[users] User resolver', async () => {
 
     afterEach(() => {
       sinon.restore();
+      bcryptHashStub.restore();
       userFindOneStub.restore();
     });
 
@@ -179,10 +185,6 @@ describe('[users] User resolver', async () => {
       });
 
       it('should save hashed password to DB', done => {
-        const hashedPassword = '1234567890qwertyuiop';
-
-        const bcryptStub = sinon.stub(bcrypt, 'hash').resolves(hashedPassword);
-
         const userSaveStub = sinon
           .stub(User.prototype, 'save')
           .callsFake(function (this: unknown) {
@@ -191,7 +193,6 @@ describe('[users] User resolver', async () => {
             expect((this as any).password).to.equal(hashedPassword);
 
             done();
-            bcryptStub.restore();
             userSaveStub.restore();
           });
 
@@ -482,7 +483,9 @@ describe('[users] User resolver', async () => {
         return this;
       }
     };
+    const hashedPassword = '1234567890qwertyuiop';
 
+    let bcryptHashStub: SinonStub;
     let userFindByIdStub: SinonStub;
     let bcryptcompareStub: SinonStub;
 
@@ -497,6 +500,8 @@ describe('[users] User resolver', async () => {
     };
 
     beforeEach(() => {
+      bcryptHashStub = sinon.stub(bcrypt, 'hash').resolves(hashedPassword);
+
       bcryptcompareStub = sinon.stub(bcrypt, 'compare').resolves(true);
 
       userFindByIdStub = sinon
@@ -514,9 +519,10 @@ describe('[users] User resolver', async () => {
     });
 
     afterEach(() => {
-      sinon.restore();
+      bcryptHashStub.restore();
       userFindByIdStub.restore();
       bcryptcompareStub.restore();
+      sinon.restore();
     });
 
     describe('[atuh]', () => {
@@ -692,10 +698,6 @@ describe('[users] User resolver', async () => {
       });
 
       it('should save hashed password to DB', done => {
-        const hashedPassword = '1234567890qwertyuiop';
-
-        const bcryptStub = sinon.stub(bcrypt, 'hash').resolves(hashedPassword);
-
         const userInstanceStub = sinon
           .stub(userInstance, 'save')
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -706,7 +708,6 @@ describe('[users] User resolver', async () => {
             expect((this as any).password).to.equal(hashedPassword);
 
             done();
-            bcryptStub.restore();
             userInstanceStub.restore();
           });
 
