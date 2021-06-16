@@ -14,10 +14,17 @@ import CustomError from 'utils/customError';
 // types
 import type { Request } from 'express';
 
+type GetPromiseResolveType<T> = T extends PromiseLike<infer U>
+  ? GetPromiseResolveType<U> // For recusive ness
+  : T;
+
 describe('[tags] Tags resolver', () => {
   describe('[addTags]', () => {
+    type argsType = Parameters<typeof tags.addTags>[0];
+    type retType = GetPromiseResolveType<ReturnType<typeof tags.addTags>>;
+
     const mockReq: Partial<Request> = {};
-    const mockArgs: { tags: Array<string> } = { tags: [] };
+    const mockArgs: argsType = { tags: [] };
 
     beforeEach(() => {
       mockReq.isAuth = true;
@@ -37,7 +44,7 @@ describe('[tags] Tags resolver', () => {
 
         return tags
           .addTags(mockArgs, mockReq as Request)
-          .then((result: Promise<Array<string>>) => {
+          .then((result: retType) => {
             expect(result).to.be.undefined;
           })
           .catch((err: Error) => {
@@ -57,7 +64,7 @@ describe('[tags] Tags resolver', () => {
 
         return tags
           .addTags(mockArgs, mockReq as Request)
-          .then((result: Promise<Array<string>>) => {
+          .then((result: retType) => {
             expect(result).to.be.undefined;
           })
           .catch((err: Error) => {
@@ -69,6 +76,25 @@ describe('[tags] Tags resolver', () => {
             expect(err).to.have.property('status', 401);
             expect(err).to.have.property('data').that.is.empty;
           });
+      });
+    });
+
+    describe('[input validation]', () => {
+      it("should throw CustomError('Invalid Input') whene there are no valid tags given", async () => {
+        mockArgs.tags = ['tt', '12', '    12    '];
+
+        try {
+          const result = await tags.addTags(mockArgs, mockReq as Request);
+          expect(result).to.be.undefined;
+        } catch (err) {
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Invalid Input');
+          expect(err).to.have.property('status', 422);
+          expect(err).to.have.property('data').that.deep.include({
+            message: 'No valid tags',
+            field: 'tags'
+          });
+        }
       });
     });
   });
