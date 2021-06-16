@@ -2,21 +2,20 @@
 import sinon from 'sinon';
 import bcrypt from 'bcryptjs';
 import { expect } from 'chai';
+import type { Request } from 'express';
+import type { SinonStub } from 'sinon';
 
 // model
 import User from 'models/user';
+import type { IUser } from 'models/user/types';
 
 // gql
 import * as users from 'gql/resolvers/users';
+import type * as T from 'gql/resolvers/users/types';
 
 // utils
 import CustomError from 'utils/customError';
 import * as Token from 'utils/token';
-
-// types
-import type { Request } from 'express';
-import type { SinonStub } from 'sinon';
-import type * as T from 'gql/resolvers/users/types';
 
 describe('[users] User resolver', async () => {
   describe('[createUser]', () => {
@@ -472,6 +471,9 @@ describe('[users] User resolver', async () => {
   });
 
   describe('[changePassword]', () => {
+    let userFindByIdStub: SinonStub;
+    let bcryptcompareStub: SinonStub;
+
     const mockReq: Partial<Request> = {
       isAuth: true,
       userId: '123456789012'
@@ -483,6 +485,19 @@ describe('[users] User resolver', async () => {
     };
 
     beforeEach(() => {
+      bcryptcompareStub = sinon.stub(bcrypt, 'compare').resolves(true);
+
+      userFindByIdStub = sinon
+        .stub(User, 'findById')
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        .resolves({
+          _id: '123456789012',
+          username: 'test',
+          password: 'password',
+          tags: []
+        });
+
       mockReq.isAuth = true;
       mockReq.userId = '123456789012';
 
@@ -493,6 +508,8 @@ describe('[users] User resolver', async () => {
 
     afterEach(() => {
       sinon.restore();
+      userFindByIdStub.restore();
+      bcryptcompareStub.restore();
     });
 
     describe('[atuh]', () => {
@@ -619,6 +636,90 @@ describe('[users] User resolver', async () => {
               field: 'confirmNewPassword'
             });
           });
+      });
+    });
+
+    describe('[DB]', () => {
+      it("should throw CustomError('User not found', 401) when user is not found", () => {
+        // restore for this test
+        userFindByIdStub.restore();
+
+        const userStub = sinon.stub(User, 'findById').resolves(null);
+
+        return users
+          .changePassword(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+
+            userStub.restore();
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property('message', 'User not found');
+            expect(err).to.have.property('status', 401);
+
+            userStub.restore();
+          });
+      });
+
+      it("should throw CustomError('Incorrect old password', 401) when oldPassword is incorrect", () => {
+        // restore for this test
+        bcryptcompareStub.restore();
+
+        const bcryptStub = sinon.stub(bcrypt, 'compare').resolves(false);
+
+        return users
+          .changePassword(mockArgs, mockReq as Request)
+          .then(result => {
+            expect(result).to.be.undefined;
+
+            bcryptStub.restore();
+          })
+          .catch(err => {
+            expect(err).to.be.instanceOf(CustomError);
+            expect(err).to.have.property('message', 'Incorrect old password');
+            expect(err).to.have.property('status', 401);
+
+            bcryptStub.restore();
+          });
+      });
+
+      it('should save hashed password to DB', done => {
+        // restore for this test
+        userFindByIdStub.restore();
+
+        const hashedPassword = '1234567890qwertyuiop';
+
+        // Override cannot override properties which are not function, I think
+        const newUserInstanceStub = sinon.createStubInstance<IUser>(User, {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          save: sinon.stub().callsFake(function (this: unknown) {
+            // will give timeout error when this fails
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            expect((this as any).password).to.equal(hashedPassword);
+
+            done();
+            userStub.restore();
+            bcryptStub.restore();
+          })
+        });
+
+        const userStub = sinon
+          .stub(User, 'findById')
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          .resolves({
+            ...newUserInstanceStub,
+            _id: '123456789012',
+            username: 'test',
+            password: 'password',
+            tags: []
+          });
+
+        const bcryptStub = sinon.stub(bcrypt, 'hash').resolves(hashedPassword);
+
+        users.changePassword(mockArgs, mockReq as Request);
       });
     });
   });
