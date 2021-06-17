@@ -1,9 +1,9 @@
 // pacages
-import sinon from 'sinon';
 import { expect } from 'chai';
+import sinon, { SinonStub } from 'sinon';
 
 // model
-// import User from 'models/user';
+import User, { IUser } from 'models/user';
 
 // gql
 import * as tags from 'gql/resolvers/tags';
@@ -20,20 +20,41 @@ type GetPromiseResolveType<T> = T extends PromiseLike<infer U>
 
 describe('[tags] Tags resolver', () => {
   describe('[addTags]', () => {
-    type argsType = Parameters<typeof tags.addTags>[0];
-    type retType = GetPromiseResolveType<ReturnType<typeof tags.addTags>>;
+    type ArgsType = Parameters<typeof tags.addTags>[0];
+    type RetType = GetPromiseResolveType<ReturnType<typeof tags.addTags>>;
 
     const mockReq: Partial<Request> = {};
-    const mockArgs: argsType = { tags: [] };
+    const mockArgs: ArgsType = { tags: ['newTag', 'tags'] };
+
+    // Override cannot override properties which are not function, I think
+    const userInstance = {
+      ...sinon.createStubInstance<IUser>(User, {}),
+      _id: '123456789012',
+      username: 'test',
+      password: 'password',
+      tags: ['oldTag', 'tags'],
+      save: function () {
+        return this;
+      }
+    };
+
+    let userFindByIdStub: SinonStub;
 
     beforeEach(() => {
       mockReq.isAuth = true;
       mockReq.userId = '123456789012';
 
-      mockArgs.tags = [];
+      mockArgs.tags = ['newTag', 'tags'];
+
+      userFindByIdStub = sinon
+        .stub(User, 'findById')
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        .resolves(userInstance);
     });
 
     afterEach(() => {
+      userFindByIdStub.restore();
       sinon.restore();
     });
 
@@ -44,7 +65,7 @@ describe('[tags] Tags resolver', () => {
 
         return tags
           .addTags(mockArgs, mockReq as Request)
-          .then((result: retType) => {
+          .then((result: RetType) => {
             expect(result).to.be.undefined;
           })
           .catch((err: Error) => {
@@ -64,7 +85,7 @@ describe('[tags] Tags resolver', () => {
 
         return tags
           .addTags(mockArgs, mockReq as Request)
-          .then((result: retType) => {
+          .then((result: RetType) => {
             expect(result).to.be.undefined;
           })
           .catch((err: Error) => {
@@ -95,6 +116,45 @@ describe('[tags] Tags resolver', () => {
             field: 'tags'
           });
         }
+      });
+    });
+
+    describe('[DB]', () => {
+      it("should throw CustomError('User already exists') when username is already used", async () => {
+        // Restore for this test
+        userFindByIdStub.restore();
+
+        // Create new stub for this test
+        const userStub = sinon.stub(User, 'findById').resolves(null);
+
+        try {
+          const result = await tags.addTags(mockArgs, mockReq as Request);
+          expect(result).to.be.undefined;
+        } catch (err) {
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'User not found');
+          expect(err).to.have.property('status', 401);
+          expect(err).to.have.property('data').that.is.empty;
+        }
+        userStub.restore();
+      });
+
+      it('should return [] and not call save if there are no tags to be added', async () => {
+        // Replace args.tags by tags that are already present in DB
+        mockArgs.tags.splice(0, mockArgs.tags.length - 1, ...userInstance.tags);
+
+        const userSaveStub = sinon.stub(userInstance, 'save');
+
+        try {
+          const result = await tags.addTags(mockArgs, mockReq as Request);
+
+          expect(userSaveStub.called).to.be.false;
+          expect(result).to.be.an('array').that.is.empty;
+        } catch (err) {
+          expect(err).to.be.undefined;
+        }
+
+        userSaveStub.restore();
       });
     });
   });
