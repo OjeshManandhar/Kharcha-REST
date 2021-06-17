@@ -144,7 +144,7 @@ describe('[tags] Tags resolver', () => {
     authTests<ArgsType, RetType>(tags.addTags, mockArgs);
 
     describe('[input validation]', () => {
-      it("should throw CustomError('Invalid Input') whene there are no valid tags given", async () => {
+      it("should throw CustomError('Invalid Input') when there are no valid tags given", async () => {
         mockArgs.tags = ['tt', '12', '    12    '];
 
         try {
@@ -255,6 +255,61 @@ describe('[tags] Tags resolver', () => {
 
         // have.members use when Order Wholeness Matters
         expect(result).to.have.members(userInstance.tags);
+      });
+    });
+  });
+
+  describe('[searchTags]', () => {
+    type ArgsType = Parameters<T.SearchTags>[0];
+    type RetType = GetPromiseResolveType<ReturnType<T.SearchTags>>;
+
+    const mockArgs: ArgsType = { tag: 'old' };
+
+    beforeEach(() => {
+      mockArgs.tag = 'old';
+    });
+
+    authTests<ArgsType, RetType>(tags.searchTags, mockArgs);
+
+    describe('[input validation]', () => {
+      it("should throw CustomError('Invalid Input') when invalid tag is given", async () => {
+        mockArgs.tag = '   ';
+
+        try {
+          const result = await tags.searchTags(mockArgs, mockReq as Request);
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Invalid Input');
+          expect(err).to.have.property('status', 422);
+          expect(err).to.have.property('data').that.deep.include({
+            message: 'Empty tag given',
+            field: 'tag'
+          });
+        }
+      });
+    });
+
+    describe('[DB]', () => {
+      checkUserExistTest<ArgsType, RetType>(tags.searchTags, mockArgs);
+    });
+
+    describe('[return value]', () => {
+      it('should return only tags that pass the regex', async () => {
+        mockArgs.tag = 'old';
+        userInstance.tags = ['oldTags', 'old', 'tags'];
+
+        const resultArr = ['oldTags', 'old'];
+
+        const result = await tags.searchTags(mockArgs, mockReq as Request);
+
+        console.log('result:', result);
+
+        expect(result).to.have.members(resultArr);
       });
     });
   });
