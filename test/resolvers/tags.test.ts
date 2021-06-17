@@ -169,8 +169,6 @@ describe('[tags] Tags resolver', () => {
         );
 
         userInstance.save.callsFake(function (this: unknown) {
-          console.log('Fake called');
-
           // have.members use when Order Wholeness Matters
           // will give timeout error when this fails
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -180,6 +178,19 @@ describe('[tags] Tags resolver', () => {
         });
 
         tags.addTags(mockArgs, mockReq as Request);
+      });
+
+      it("should throw CustomError('Could not update') when new tags are not saved", async () => {
+        userInstance.save.resolves({});
+
+        try {
+          await tags.addTags(mockArgs, mockReq as Request);
+        } catch (err) {
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Could not update');
+          expect(err).to.have.property('status', 500);
+          expect(err).to.have.property('data').to.be.empty;
+        }
       });
     });
   });
