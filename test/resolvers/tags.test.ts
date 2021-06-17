@@ -1,6 +1,6 @@
 // pacages
-import { expect } from 'chai';
 import sinon, { SinonStub } from 'sinon';
+import { expect, AssertionError } from 'chai';
 
 // model
 import User, { IUser } from 'models/user';
@@ -15,23 +15,28 @@ import CustomError from 'utils/customError';
 import type { Request } from 'express';
 import type * as T from 'gql/resolvers/tags/types';
 
-// type GetPromiseResolveType<T> = T extends PromiseLike<infer U>
-//   ? GetPromiseResolveType<U> // For recusive ness
-//   : T;
+type GetPromiseResolveType<T> = T extends PromiseLike<infer U>
+  ? GetPromiseResolveType<U> // For recusive ness
+  : T;
 
 function authTests<Arg, Ret>(
-  fn: (args: Arg, req: Request) => Ret,
+  fn: (args: Arg, req: Request) => Promise<Ret>,
   mockArgs: Arg,
   mockReq: Partial<Request>
 ) {
   describe('[atuh]', () => {
     it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = false i.e. not logged in", async () => {
-      mockReq.isAuth = true;
+      mockReq.isAuth = false;
       mockReq.userId = '123456789012';
 
       try {
-        await fn(mockArgs, mockReq as Request);
+        const result = await fn(mockArgs, mockReq as Request);
+
+        expect(result).to.be.undefined;
       } catch (err) {
+        // To throw the error thrown by expect when expect in try fails
+        if (err instanceof AssertionError) throw err;
+
         expect(err).to.be.instanceOf(CustomError);
         expect(err).to.have.property('message', 'Unauthorized. Log in first');
         expect(err).to.have.property('status', 401);
@@ -44,8 +49,13 @@ function authTests<Arg, Ret>(
       mockReq.userId = undefined;
 
       try {
-        await fn(mockArgs, mockReq as Request);
+        const result = await fn(mockArgs, mockReq as Request);
+
+        expect(result).to.be.undefined;
       } catch (err) {
+        // To throw the error thrown by expect when expect in try fails
+        if (err instanceof AssertionError) throw err;
+
         expect(err).to.be.instanceOf(CustomError);
         expect(err).to.have.property('message', 'Unauthorized. Log in first');
         expect(err).to.have.property('status', 401);
@@ -97,7 +107,7 @@ describe('[tags] Tags resolver', () => {
 
   describe('[addTags]', () => {
     type ArgsType = Parameters<T.AddTags>[0];
-    type RetType = ReturnType<T.AddTags>;
+    type RetType = GetPromiseResolveType<ReturnType<T.AddTags>>;
 
     const mockArgs: ArgsType = { tags: ['newTag', 'tags'] };
 
@@ -113,8 +123,12 @@ describe('[tags] Tags resolver', () => {
 
         try {
           const result = await tags.addTags(mockArgs, mockReq as Request);
+
           expect(result).to.be.undefined;
         } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Invalid Input');
           expect(err).to.have.property('status', 422);
@@ -127,7 +141,7 @@ describe('[tags] Tags resolver', () => {
     });
 
     describe('[DB]', () => {
-      it("should throw CustomError('User already exists') when username is already used", async () => {
+      it("should throw CustomError('User not found') when user doesnot exist", async () => {
         // Restore for this test
         userFindByIdStub.restore();
 
@@ -136,18 +150,23 @@ describe('[tags] Tags resolver', () => {
 
         try {
           const result = await tags.addTags(mockArgs, mockReq as Request);
+
           expect(result).to.be.undefined;
         } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'User not found');
           expect(err).to.have.property('status', 401);
           expect(err).to.have.property('data').that.is.empty;
         }
+
         userStub.restore();
       });
 
       it('should return [] and not call save if there are no tags to be added', async () => {
-        // Reset save for this test as it need to be traced for calls
+        // Reset save for this test as its calls need to be traced
         userInstance.save.reset();
 
         // Replace args.tags by tags that are already present in DB
@@ -184,8 +203,13 @@ describe('[tags] Tags resolver', () => {
         userInstance.save.resolves({});
 
         try {
-          await tags.addTags(mockArgs, mockReq as Request);
+          const result = await tags.addTags(mockArgs, mockReq as Request);
+
+          expect(result).to.be.undefined;
         } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Could not update');
           expect(err).to.have.property('status', 500);
@@ -199,10 +223,14 @@ describe('[tags] Tags resolver', () => {
         // Found by comparing userInstance.tages and mockArgs.tags
         const tagsThatAreAdded = ['newTag'];
 
-        const result = await tags.addTags(mockArgs, mockReq as Request);
+        try {
+          const result = await tags.addTags(mockArgs, mockReq as Request);
 
-        // Unordered Wholeness Matters — .to.have.members
-        expect(result).to.have.members(tagsThatAreAdded);
+          // Unordered Wholeness Matters — .to.have.members
+          expect(result).to.have.members(tagsThatAreAdded);
+        } catch (err) {
+          expect(err).to.be.undefined;
+        }
       });
     });
   });
