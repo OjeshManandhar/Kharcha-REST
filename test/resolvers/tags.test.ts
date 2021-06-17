@@ -19,53 +19,76 @@ type GetPromiseResolveType<T> = T extends PromiseLike<infer U>
   ? GetPromiseResolveType<U> // For recusive ness
   : T;
 
-function authTests<Arg, Ret>(
-  fn: (args: Arg, req: Request) => Promise<Ret>,
-  mockArgs: Arg,
-  mockReq: Partial<Request>
-) {
-  describe('[atuh]', () => {
-    it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = false i.e. not logged in", async () => {
-      mockReq.isAuth = false;
-      mockReq.userId = '123456789012';
-
-      try {
-        const result = await fn(mockArgs, mockReq as Request);
-
-        expect(result).to.be.undefined;
-      } catch (err) {
-        // To throw the error thrown by expect when expect in try fails
-        if (err instanceof AssertionError) throw err;
-
-        expect(err).to.be.instanceOf(CustomError);
-        expect(err).to.have.property('message', 'Unauthorized. Log in first');
-        expect(err).to.have.property('status', 401);
-        expect(err).to.have.property('data').that.is.empty;
-      }
-    });
-
-    it("should throw CustomError('Unauthorized. Log out first', 401) if req.uesrId is falsy i.e. not logged in", async () => {
-      mockReq.isAuth = true;
-      mockReq.userId = undefined;
-
-      try {
-        const result = await fn(mockArgs, mockReq as Request);
-
-        expect(result).to.be.undefined;
-      } catch (err) {
-        // To throw the error thrown by expect when expect in try fails
-        if (err instanceof AssertionError) throw err;
-
-        expect(err).to.be.instanceOf(CustomError);
-        expect(err).to.have.property('message', 'Unauthorized. Log in first');
-        expect(err).to.have.property('status', 401);
-        expect(err).to.have.property('data').that.is.empty;
-      }
-    });
-  });
-}
-
 describe('[tags] Tags resolver', () => {
+  function authTests<Arg, Ret>(
+    fn: (args: Arg, req: Request) => Promise<Ret>,
+    mockArgs: Arg
+  ) {
+    describe('[atuh]', () => {
+      it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = false i.e. not logged in", async () => {
+        mockReq.isAuth = false;
+        mockReq.userId = '123456789012';
+
+        try {
+          const result = await fn(mockArgs, mockReq as Request);
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Unauthorized. Log in first');
+          expect(err).to.have.property('status', 401);
+          expect(err).to.have.property('data').that.is.empty;
+        }
+      });
+
+      it("should throw CustomError('Unauthorized. Log out first', 401) if req.uesrId is falsy i.e. not logged in", async () => {
+        mockReq.isAuth = true;
+        mockReq.userId = undefined;
+
+        try {
+          const result = await fn(mockArgs, mockReq as Request);
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Unauthorized. Log in first');
+          expect(err).to.have.property('status', 401);
+          expect(err).to.have.property('data').that.is.empty;
+        }
+      });
+    });
+  }
+
+  function checkUserExistTest<Arg, Ret>(
+    fn: (args: Arg, req: Request) => Promise<Ret>,
+    mockArgs: Arg
+  ) {
+    it("should throw CustomError('User not found') when user doesnot exist", async () => {
+      // Change resolve value for this test
+      userFindByIdStub.resolves(null);
+
+      try {
+        const result: Ret = await fn(mockArgs, mockReq as Request);
+
+        expect(result).to.be.undefined;
+      } catch (err) {
+        // To throw the error thrown by expect when expect in try fails
+        if (err instanceof AssertionError) throw err;
+
+        expect(err).to.be.instanceOf(CustomError);
+        expect(err).to.have.property('message', 'User not found');
+        expect(err).to.have.property('status', 401);
+        expect(err).to.have.property('data').that.is.empty;
+      }
+    });
+  }
+
   const mockReq: Partial<Request> = {};
 
   const userInstance = {
@@ -115,7 +138,7 @@ describe('[tags] Tags resolver', () => {
       mockArgs.tags = ['newTag', 'tags'];
     });
 
-    authTests<ArgsType, RetType>(tags.addTags, mockArgs, mockReq);
+    authTests<ArgsType, RetType>(tags.addTags, mockArgs);
 
     describe('[input validation]', () => {
       it("should throw CustomError('Invalid Input') whene there are no valid tags given", async () => {
@@ -141,29 +164,7 @@ describe('[tags] Tags resolver', () => {
     });
 
     describe('[DB]', () => {
-      it("should throw CustomError('User not found') when user doesnot exist", async () => {
-        // Restore for this test
-        userFindByIdStub.restore();
-
-        // Create new stub for this test
-        const userStub = sinon.stub(User, 'findById').resolves(null);
-
-        try {
-          const result = await tags.addTags(mockArgs, mockReq as Request);
-
-          expect(result).to.be.undefined;
-        } catch (err) {
-          // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
-
-          expect(err).to.be.instanceOf(CustomError);
-          expect(err).to.have.property('message', 'User not found');
-          expect(err).to.have.property('status', 401);
-          expect(err).to.have.property('data').that.is.empty;
-        }
-
-        userStub.restore();
-      });
+      checkUserExistTest<ArgsType, RetType>(tags.addTags, mockArgs);
 
       it('should return [] and not call save if there are no tags to be added', async () => {
         // Reset save for this test as its calls need to be traced
