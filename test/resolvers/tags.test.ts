@@ -13,99 +13,99 @@ import CustomError from 'utils/customError';
 
 // types
 import type { Request } from 'express';
+import type * as T from 'gql/resolvers/tags/types';
 
-type GetPromiseResolveType<T> = T extends PromiseLike<infer U>
-  ? GetPromiseResolveType<U> // For recusive ness
-  : T;
+// type GetPromiseResolveType<T> = T extends PromiseLike<infer U>
+//   ? GetPromiseResolveType<U> // For recusive ness
+//   : T;
 
-describe('[tags] Tags resolver', () => {
-  describe('[addTags]', () => {
-    type ArgsType = Parameters<typeof tags.addTags>[0];
-    type RetType = GetPromiseResolveType<ReturnType<typeof tags.addTags>>;
-
-    const mockReq: Partial<Request> = {};
-    const mockArgs: ArgsType = { tags: ['newTag', 'tags'] };
-
-    // Override cannot override properties which are not function, I think
-    const userInstance = {
-      ...sinon.createStubInstance<IUser>(User, {}),
-      _id: '123456789012',
-      username: 'test',
-      password: 'password',
-      tags: ['oldTag', 'tags'],
-      save: sinon.stub().resolvesThis()
-    };
-
-    let userFindByIdStub: SinonStub;
-
-    beforeEach(() => {
+function authTests<Arg, Ret>(
+  fn: (args: Arg, req: Request) => Ret,
+  mockArgs: Arg,
+  mockReq: Partial<Request>
+) {
+  describe('[atuh]', () => {
+    it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = false i.e. not logged in", async () => {
       mockReq.isAuth = true;
       mockReq.userId = '123456789012';
 
+      try {
+        await fn(mockArgs, mockReq as Request);
+      } catch (err) {
+        expect(err).to.be.instanceOf(CustomError);
+        expect(err).to.have.property('message', 'Unauthorized. Log in first');
+        expect(err).to.have.property('status', 401);
+        expect(err).to.have.property('data').that.is.empty;
+      }
+    });
+
+    it("should throw CustomError('Unauthorized. Log out first', 401) if req.uesrId is falsy i.e. not logged in", async () => {
+      mockReq.isAuth = true;
+      mockReq.userId = undefined;
+
+      try {
+        await fn(mockArgs, mockReq as Request);
+      } catch (err) {
+        expect(err).to.be.instanceOf(CustomError);
+        expect(err).to.have.property('message', 'Unauthorized. Log in first');
+        expect(err).to.have.property('status', 401);
+        expect(err).to.have.property('data').that.is.empty;
+      }
+    });
+  });
+}
+
+describe('[tags] Tags resolver', () => {
+  const mockReq: Partial<Request> = {};
+
+  const userInstance = {
+    // Override cannot override properties which are not function, I think
+    ...sinon.createStubInstance<IUser>(User, {}),
+    _id: '123456789012',
+    username: 'test',
+    password: 'password',
+    tags: ['oldTag', 'tags'],
+    save: sinon.stub().resolvesThis()
+  };
+
+  let userFindByIdStub: SinonStub;
+
+  beforeEach(() => {
+    mockReq.isAuth = true;
+    mockReq.userId = '123456789012';
+
+    userInstance.tags = ['oldTag', 'tags'];
+    userInstance.save = sinon.stub().resolvesThis();
+
+    userFindByIdStub = sinon
+      .stub(User, 'findById')
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      .resolves(userInstance);
+  });
+
+  afterEach(() => {
+    /**
+     * This won't work as there is no function to
+     * restore to for this stub
+     * userInstance.save.restore();
+     */
+
+    userFindByIdStub.restore();
+    sinon.restore();
+  });
+
+  describe('[addTags]', () => {
+    type ArgsType = Parameters<T.AddTags>[0];
+    type RetType = ReturnType<T.AddTags>;
+
+    const mockArgs: ArgsType = { tags: ['newTag', 'tags'] };
+
+    beforeEach(() => {
       mockArgs.tags = ['newTag', 'tags'];
-
-      userInstance.tags = ['oldTag', 'tags'];
-      userInstance.save = sinon.stub().resolvesThis();
-
-      userFindByIdStub = sinon
-        .stub(User, 'findById')
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        .resolves(userInstance);
     });
 
-    afterEach(() => {
-      /**
-       * This won't work as there is no function to
-       * restore to for this stub
-       * userInstance.save.restore();
-       */
-
-      userFindByIdStub.restore();
-      sinon.restore();
-    });
-
-    describe('[atuh]', () => {
-      it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = false i.e. not logged in", () => {
-        mockReq.isAuth = false;
-        mockReq.userId = '123456789012';
-
-        return tags
-          .addTags(mockArgs, mockReq as Request)
-          .then((result: RetType) => {
-            expect(result).to.be.undefined;
-          })
-          .catch((err: Error) => {
-            expect(err).to.be.instanceOf(CustomError);
-            expect(err).to.have.property(
-              'message',
-              'Unauthorized. Log in first'
-            );
-            expect(err).to.have.property('status', 401);
-            expect(err).to.have.property('data').that.is.empty;
-          });
-      });
-
-      it("should throw CustomError('Unauthorized. Log out first', 401) if req.uesrId is falsy i.e. not logged in", () => {
-        mockReq.isAuth = true;
-        mockReq.userId = undefined;
-
-        return tags
-          .addTags(mockArgs, mockReq as Request)
-          .then((result: RetType) => {
-            expect(result).to.be.undefined;
-          })
-          .catch((err: Error) => {
-            expect(err).to.be.instanceOf(CustomError);
-            expect(err).to.have.property(
-              'message',
-              'Unauthorized. Log in first'
-            );
-            expect(err).to.have.property('status', 401);
-            expect(err).to.have.property('data').that.is.empty;
-          });
-      });
-    });
+    authTests<ArgsType, RetType>(tags.addTags, mockArgs, mockReq);
 
     describe('[input validation]', () => {
       it("should throw CustomError('Invalid Input') whene there are no valid tags given", async () => {
