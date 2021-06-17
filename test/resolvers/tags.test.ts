@@ -186,6 +186,9 @@ describe('[tags] Tags resolver', () => {
           expect(userInstance.save.called).to.be.false;
           expect(result).to.be.an('array').that.is.empty;
         } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
           expect(err).to.be.undefined;
         }
       });
@@ -236,6 +239,9 @@ describe('[tags] Tags resolver', () => {
           // Unordered Wholeness Matters — .to.have.members
           expect(result).to.have.members(tagsThatAreAdded);
         } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
           expect(err).to.be.undefined;
         }
       });
@@ -485,7 +491,109 @@ describe('[tags] Tags resolver', () => {
 
           expect(result).to.equal(mockArgs.newTag);
         } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
           expect(err).to.be.undefined;
+        }
+      });
+    });
+  });
+
+  describe('[deleteTags]', () => {
+    type ArgsType = Parameters<T.DeleteTags>[0];
+    type RetType = GetPromiseResolveType<ReturnType<T.DeleteTags>>;
+
+    const mockArgs: ArgsType = { tags: ['newTag', 'TAGS'] };
+
+    beforeEach(() => {
+      mockArgs.tags = ['newTag', 'tags'];
+    });
+
+    authTests<ArgsType, RetType>(tags.deleteTags, mockArgs);
+
+    describe('[input validation]', () => {
+      it("should throw CustomError('Invalid Input') when there are no valid tags given", async () => {
+        mockArgs.tags = ['tt', '12', '    12    '];
+
+        try {
+          const result = await tags.addTags(mockArgs, mockReq as Request);
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Invalid Input');
+          expect(err).to.have.property('status', 422);
+          expect(err).to.have.property('data').that.deep.includes({
+            message: 'No valid tags',
+            field: 'tags'
+          });
+        }
+      });
+    });
+
+    describe('[DB]', () => {
+      checkUserExistTest<ArgsType, RetType>(tags.deleteTags, mockArgs);
+
+      it('should return [] and not call save if there are no tags to be deleted', async () => {
+        // Reset save for this test as its calls need to be traced
+        userInstance.save.reset();
+
+        // Replace args.tags by tags that are not present in DB
+        mockArgs.tags = ['new tag', 'test'];
+
+        try {
+          const result = await tags.deleteTags(mockArgs, mockReq as Request);
+
+          expect(userInstance.save.called).to.be.false;
+          expect(result).to.be.an('array').that.is.empty;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
+          expect(err).to.be.undefined;
+        }
+      });
+
+      it('should not save tags to be deleted to DB', done => {
+        userInstance.save.callsFake(function (this: unknown) {
+          // will give timeout error when this fails
+
+          // this doesn't work as stated in docs
+          // expect(tags).to.not.have.members(userInstance.tags);
+
+          expect((this as IUser).tags).to.satisfy((tags: Array<string>) =>
+            tags.reduce((acc: boolean, tag: string) => {
+              if (!acc) return false;
+
+              return mockArgs.tags.find(t => t === tag) ? false : true;
+            }, true)
+          );
+
+          done();
+        });
+
+        tags.deleteTags(mockArgs, mockReq as Request);
+      });
+
+      it("should throw CustomError('Could not update') when deleted tags are not saved", async () => {
+        userInstance.save.resolves({});
+
+        try {
+          const result = await tags.deleteTags(mockArgs, mockReq as Request);
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Could not update');
+          expect(err).to.have.property('status', 500);
+          expect(err).to.have.property('data').to.be.empty;
         }
       });
     });
