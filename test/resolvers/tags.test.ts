@@ -89,7 +89,10 @@ describe('[tags] Tags resolver', () => {
     });
   }
 
-  const mockReq: Partial<Request> = {};
+  const mockReq: Partial<Request> = {
+    isAuth: true,
+    userId: '123456789012'
+  };
 
   const userInstance = {
     // Override cannot override properties which are not function, I think
@@ -232,6 +235,26 @@ describe('[tags] Tags resolver', () => {
         } catch (err) {
           expect(err).to.be.undefined;
         }
+      });
+    });
+  });
+
+  describe('[listTags]', () => {
+    type ArgsType = Parameters<T.ListTags>[0];
+    type RetType = GetPromiseResolveType<ReturnType<T.ListTags>>;
+
+    authTests<ArgsType, RetType>(tags.listTags, null);
+
+    describe('[DB]', () => {
+      checkUserExistTest<ArgsType, RetType>(tags.listTags, null);
+    });
+
+    describe('[return value]', () => {
+      it('should return only the tags stored in users document', async () => {
+        const result = await tags.listTags(null, mockReq as Request);
+
+        // have.members use when Order Wholeness Matters
+        expect(result).to.have.members(userInstance.tags);
       });
     });
   });
