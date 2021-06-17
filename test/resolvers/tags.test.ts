@@ -135,7 +135,7 @@ describe('[tags] Tags resolver', () => {
     type ArgsType = Parameters<T.AddTags>[0];
     type RetType = GetPromiseResolveType<ReturnType<T.AddTags>>;
 
-    const mockArgs: ArgsType = { tags: ['newTag', 'tags'] };
+    const mockArgs: ArgsType = { tags: ['newTag', 'TAGS'] };
 
     beforeEach(() => {
       mockArgs.tags = ['newTag', 'tags'];
@@ -173,8 +173,12 @@ describe('[tags] Tags resolver', () => {
         // Reset save for this test as its calls need to be traced
         userInstance.save.reset();
 
-        // Replace args.tags by tags that are already present in DB
-        mockArgs.tags.splice(0, mockArgs.tags.length - 1, ...userInstance.tags);
+        // Replace args.tags by tags in unppercase that are already present in DB
+        mockArgs.tags.splice(
+          0,
+          mockArgs.tags.length - 1,
+          ...userInstance.tags.map(t => t.toUpperCase())
+        );
 
         try {
           const result = await tags.addTags(mockArgs, mockReq as Request);
