@@ -49,3 +49,4 @@ try {
 }
 
 export default Record;
+export type { IRecord };

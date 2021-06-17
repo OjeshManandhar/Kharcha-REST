@@ -27,3 +27,4 @@ try {
 }
 
 export default User;
+export type { IUser };
