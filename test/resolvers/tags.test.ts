@@ -193,5 +193,17 @@ describe('[tags] Tags resolver', () => {
         }
       });
     });
+
+    describe('[return value]', () => {
+      it('should only return tags that are added', async () => {
+        // Found by comparing userInstance.tages and mockArgs.tags
+        const tagsThatAreAdded = ['newTag'];
+
+        const result = await tags.addTags(mockArgs, mockReq as Request);
+
+        // Unordered Wholeness Matters — .to.have.members
+        expect(result).to.have.members(tagsThatAreAdded);
+      });
+    });
   });
 });
