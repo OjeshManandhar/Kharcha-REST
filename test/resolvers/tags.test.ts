@@ -316,8 +316,6 @@ describe('[tags] Tags resolver', () => {
 
         const result = await tags.searchTags(mockArgs, mockReq as Request);
 
-        console.log('result:', result);
-
         expect(result).to.have.members(resultArr);
       });
     });
@@ -594,6 +592,25 @@ describe('[tags] Tags resolver', () => {
           expect(err).to.have.property('message', 'Could not update');
           expect(err).to.have.property('status', 500);
           expect(err).to.have.property('data').to.be.empty;
+        }
+      });
+    });
+
+    describe('[return value]', () => {
+      it('should only return tags that are deleted', async () => {
+        // Found by comparing userInstance.tages and mockArgs.tags
+        const tagsThatAreAdded = ['tags'];
+
+        try {
+          const result = await tags.deleteTags(mockArgs, mockReq as Request);
+
+          // Unordered Wholeness Matters — .to.have.members
+          expect(result).to.have.members(tagsThatAreAdded);
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
+          expect(err).to.be.undefined;
         }
       });
     });
