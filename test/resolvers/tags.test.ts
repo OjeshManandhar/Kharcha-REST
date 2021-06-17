@@ -158,7 +158,7 @@ describe('[tags] Tags resolver', () => {
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Invalid Input');
           expect(err).to.have.property('status', 422);
-          expect(err).to.have.property('data').that.deep.include({
+          expect(err).to.have.property('data').that.deep.includes({
             message: 'No valid tags',
             field: 'tags'
           });
@@ -286,7 +286,7 @@ describe('[tags] Tags resolver', () => {
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Invalid Input');
           expect(err).to.have.property('status', 422);
-          expect(err).to.have.property('data').that.deep.include({
+          expect(err).to.have.property('data').that.deep.includes({
             message: 'Empty tag given',
             field: 'tag'
           });
@@ -311,6 +311,89 @@ describe('[tags] Tags resolver', () => {
 
         expect(result).to.have.members(resultArr);
       });
+    });
+  });
+
+  describe('[editTag]', () => {
+    type ArgsType = Parameters<T.EditTag>[0];
+    type RetType = GetPromiseResolveType<ReturnType<T.EditTag>>;
+
+    const mockArgs: ArgsType = { oldTag: 'oldTag', newTag: 'newTag' };
+
+    beforeEach(() => {
+      mockArgs.oldTag = 'oldTag';
+      mockArgs.newTag = 'newTag';
+    });
+
+    authTests<ArgsType, RetType>(tags.editTag, mockArgs);
+
+    describe('[input validation]', () => {
+      it("should throw CustomError('Invalid Input') when oldTag is invalid", async () => {
+        mockArgs.oldTag = '  tt ';
+
+        try {
+          const result = await tags.editTag(mockArgs, mockReq as Request);
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Invalid Input');
+          expect(err).to.have.property('status', 422);
+          expect(err).to.have.property('data').that.deep.includes({
+            message: 'Old tag must be of length 3 to 20 characters',
+            field: 'oldTag'
+          });
+        }
+      });
+
+      it("should throw CustomError('Invalid Input') when newTag is invalid", async () => {
+        mockArgs.newTag = '  tt ';
+
+        try {
+          const result = await tags.editTag(mockArgs, mockReq as Request);
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Invalid Input');
+          expect(err).to.have.property('status', 422);
+          expect(err).to.have.property('data').that.deep.includes({
+            message: 'New tag must be of length 3 to 20 characters',
+            field: 'newTag'
+          });
+        }
+      });
+
+      it("should throw CustomError('Invalid Input') when newTag is same as oldTag", async () => {
+        mockArgs.oldTag = mockArgs.newTag = 'tag';
+
+        try {
+          const result = await tags.editTag(mockArgs, mockReq as Request);
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Invalid Input');
+          expect(err).to.have.property('status', 422);
+          expect(err).to.have.property('data').that.deep.includes({
+            message: "New tag can't be same as Old tag",
+            field: 'newTag'
+          });
+        }
+      });
+    });
+
+    describe('[DB]', () => {
+      checkUserExistTest<ArgsType, RetType>(tags.editTag, mockArgs);
     });
   });
 });
