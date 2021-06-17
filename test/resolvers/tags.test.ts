@@ -194,8 +194,7 @@ describe('[tags] Tags resolver', () => {
         userInstance.save.callsFake(function (this: unknown) {
           // have.members use when Order Wholeness Matters
           // will give timeout error when this fails
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          expect((this as any).tags).to.have.members(tagsThatAreToBeSaved);
+          expect((this as IUser).tags).to.have.members(tagsThatAreToBeSaved);
 
           done();
         });
@@ -394,6 +393,97 @@ describe('[tags] Tags resolver', () => {
 
     describe('[DB]', () => {
       checkUserExistTest<ArgsType, RetType>(tags.editTag, mockArgs);
+
+      it("should throw CustomError('Invalid Input') when oldTag does not exist in document", async () => {
+        mockArgs.oldTag = '  ttt   ';
+
+        try {
+          const result = await tags.editTag(mockArgs, mockReq as Request);
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Invalid Input');
+          expect(err).to.have.property('status', 422);
+          expect(err).to.have.property('data').that.deep.includes({
+            message: "Old tag doesn't exist",
+            field: 'oldTag'
+          });
+        }
+      });
+
+      it("should throw CustomError('Invalid Input') when newTag exist in document", async () => {
+        /**
+         * userInstance.tags[0] is used for mockArgs.oldTag
+         * so use userInstance.tags[1]
+         */
+        mockArgs.newTag = userInstance.tags[1];
+
+        try {
+          const result = await tags.editTag(mockArgs, mockReq as Request);
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Invalid Input');
+          expect(err).to.have.property('status', 422);
+          expect(err).to.have.property('data').that.deep.includes({
+            message: 'New tag already exist',
+            field: 'newTag'
+          });
+        }
+      });
+
+      it('should not save oldTag and sould save newTag', done => {
+        userInstance.save.callsFake(function (this: unknown) {
+          const tags = (this as IUser).tags;
+
+          // have.members use when Order Wholeness Matters
+          // will give timeout error when this fails
+          expect(tags).to.include(mockArgs.newTag);
+          expect(tags).to.not.include(mockArgs.oldTag);
+
+          done();
+        });
+
+        tags.editTag(mockArgs, mockReq as Request);
+      });
+
+      it("should throw CustomError('Could not update') when edited tag could not be saved", async () => {
+        userInstance.save.resolves(null);
+
+        try {
+          const result = await tags.editTag(mockArgs, mockReq as Request);
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (err instanceof AssertionError) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Could not update');
+          expect(err).to.have.property('status', 500);
+          expect(err).to.have.property('data').that.is.empty;
+        }
+      });
+    });
+
+    describe('[return value]', () => {
+      it('should return newTag iff it is saved to DB', async () => {
+        try {
+          const result = await tags.editTag(mockArgs, mockReq as Request);
+
+          expect(result).to.equal(mockArgs.newTag);
+        } catch (err) {
+          expect(err).to.be.undefined;
+        }
+      });
     });
   });
 });
