@@ -191,8 +191,7 @@ describe('[users] User resolver', () => {
           .stub(User.prototype, 'save')
           .callsFake(function (this: unknown) {
             // will give timeout error when this fails
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            expect((this as any).password).to.equal(hashedPassword);
+            expect((this as IUser).password).to.equal(hashedPassword);
 
             done();
             userSaveStub.restore();
@@ -706,8 +705,7 @@ describe('[users] User resolver', () => {
           // @ts-ignore
           .callsFake(function (this: unknown) {
             // will give timeout error when this fails
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            expect((this as any).password).to.equal(hashedPassword);
+            expect((this as IUser).password).to.equal(hashedPassword);
 
             done();
             userInstanceStub.restore();
