@@ -33,9 +33,7 @@ describe('[tags] Tags resolver', () => {
       username: 'test',
       password: 'password',
       tags: ['oldTag', 'tags'],
-      save: function () {
-        return this;
-      }
+      save: sinon.stub().resolvesThis()
     };
 
     let userFindByIdStub: SinonStub;
@@ -46,6 +44,9 @@ describe('[tags] Tags resolver', () => {
 
       mockArgs.tags = ['newTag', 'tags'];
 
+      userInstance.tags = ['oldTag', 'tags'];
+      userInstance.save = sinon.stub().resolvesThis();
+
       userFindByIdStub = sinon
         .stub(User, 'findById')
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -54,6 +55,12 @@ describe('[tags] Tags resolver', () => {
     });
 
     afterEach(() => {
+      /**
+       * This won't work as there is no function to
+       * restore to for this stub
+       * userInstance.save.restore();
+       */
+
       userFindByIdStub.restore();
       sinon.restore();
     });
@@ -140,21 +147,39 @@ describe('[tags] Tags resolver', () => {
       });
 
       it('should return [] and not call save if there are no tags to be added', async () => {
+        // Reset save for this test as it need to be traced for calls
+        userInstance.save.reset();
+
         // Replace args.tags by tags that are already present in DB
         mockArgs.tags.splice(0, mockArgs.tags.length - 1, ...userInstance.tags);
-
-        const userSaveStub = sinon.stub(userInstance, 'save');
 
         try {
           const result = await tags.addTags(mockArgs, mockReq as Request);
 
-          expect(userSaveStub.called).to.be.false;
+          expect(userInstance.save.called).to.be.false;
           expect(result).to.be.an('array').that.is.empty;
         } catch (err) {
           expect(err).to.be.undefined;
         }
+      });
 
-        userSaveStub.restore();
+      it('should save all of existing tags and new tags to DB', done => {
+        const tagsThatAreToBeSaved = Array.from(
+          new Set(userInstance.tags.concat(mockArgs.tags))
+        );
+
+        userInstance.save.callsFake(function (this: unknown) {
+          console.log('Fake called');
+
+          // have.members use when Order Wholeness Matters
+          // will give timeout error when this fails
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          expect((this as any).tags).to.have.members(tagsThatAreToBeSaved);
+
+          done();
+        });
+
+        tags.addTags(mockArgs, mockReq as Request);
       });
     });
   });
