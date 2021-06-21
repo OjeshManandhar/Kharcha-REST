@@ -239,7 +239,7 @@ describe('[users] User resolver', () => {
             /**
              * Could not change this._id so changeng
              * dummyData._id to this._id.toString()
-             * as creatueUser() will retirn _id as string
+             * as creatueUser() will return _id as string
              */
             dummyData._id = this._id.toString();
             this.username = dummyData.username;
