@@ -19,7 +19,7 @@ export type Record = {
 };
 
 export type RecordInput = {
-  _id: ?string;
+  _id: string | null | undefined;
   date: Date;
   amount: number;
   type: RecordType;
