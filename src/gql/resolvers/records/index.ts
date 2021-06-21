@@ -73,9 +73,13 @@ export const createRecord: T.CreateRecord = async (args, req) => {
       // Add userId
       userId: req.userId.toString(),
       // Filter out existing tags
-      tags: record.tags.filter((tag: string) =>
-        user.tags.find(t => t.toLowerCase() === tag.toLowerCase())
-      ),
+      tags: record.tags
+        .filter((tag: string) =>
+          user.tags.find(t => t.toLowerCase() === tag.toLowerCase())
+        )
+        .map((tag: string) =>
+          user.tags.find(t => t.toLowerCase() === tag.toLowerCase())
+        ),
       description: trim(record.description)
     });
     const savedRecord = await newRecord.save();
