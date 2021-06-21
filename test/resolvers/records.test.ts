@@ -309,4 +309,15 @@ describe('[records] Records resolver', () => {
       });
     });
   });
+
+  describe('[listRecords]', () => {
+    type ArgsType = Parameters<T.ListRecords>[0];
+    type RetType = GetPromiseResolveType<ReturnType<T.ListRecords>>;
+
+    authTests<ArgsType, RetType>(records.listRecords, null);
+
+    describe('[DB]', () => {
+      checkUserExistTest<ArgsType, RetType>(records.listRecords, null);
+    });
+  });
 });
