@@ -216,6 +216,31 @@ describe('[records] Records resolver', () => {
 
         records.createRecord(mockArgs, mockReq as Request);
       });
+
+      it("should throw CustomError('Could not create') when new record is not saved", async () => {
+        const recordStub = sinon
+          .stub(Record.prototype, 'save')
+          .resolves(undefined);
+
+        try {
+          const result = await records.createRecord(
+            mockArgs,
+            mockReq as Request
+          );
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Could not create');
+          expect(err).to.have.property('status', 500);
+          expect(err).to.have.property('data').that.is.empty;
+        }
+
+        recordStub;
+      });
     });
   });
 });
