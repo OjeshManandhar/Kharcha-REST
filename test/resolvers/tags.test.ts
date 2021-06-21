@@ -1,6 +1,6 @@
 // pacages
+import { expect } from 'chai';
 import sinon, { SinonStub } from 'sinon';
-import { expect, AssertionError } from 'chai';
 
 // model
 import User, { IUser } from 'models/user';
@@ -35,7 +35,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.be.undefined;
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Unauthorized. Log in first');
@@ -54,7 +54,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.be.undefined;
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Unauthorized. Log in first');
@@ -69,7 +69,7 @@ describe('[tags] Tags resolver', () => {
     fn: (args: Arg, req: Request) => Promise<Ret>,
     mockArgs: Arg
   ) {
-    it("should throw CustomError('User not found') when user doesnot exist", async () => {
+    it("should throw CustomError('User not found') when user does not exist", async () => {
       // Change resolve value for this test
       userFindByIdStub.resolves(null);
 
@@ -79,7 +79,7 @@ describe('[tags] Tags resolver', () => {
         expect(result).to.be.undefined;
       } catch (err) {
         // To throw the error thrown by expect when expect in try fails
-        if (err instanceof AssertionError) throw err;
+        if (!(err instanceof CustomError)) throw err;
 
         expect(err).to.be.instanceOf(CustomError);
         expect(err).to.have.property('message', 'User not found');
@@ -153,7 +153,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.be.undefined;
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Invalid Input');
@@ -187,7 +187,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.be.an('array').that.is.empty;
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.undefined;
         }
@@ -218,7 +218,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.be.undefined;
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Could not update');
@@ -240,7 +240,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.have.members(tagsThatAreAdded);
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.undefined;
         }
@@ -290,7 +290,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.be.undefined;
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Invalid Input');
@@ -344,7 +344,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.be.undefined;
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Invalid Input');
@@ -365,7 +365,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.be.undefined;
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Invalid Input');
@@ -386,7 +386,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.be.undefined;
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Invalid Input');
@@ -411,7 +411,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.be.undefined;
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Invalid Input');
@@ -436,7 +436,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.be.undefined;
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Invalid Input');
@@ -472,7 +472,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.be.undefined;
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Could not update');
@@ -490,7 +490,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.equal(mockArgs.newTag);
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.undefined;
         }
@@ -520,7 +520,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.be.undefined;
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Invalid Input');
@@ -550,7 +550,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.be.an('array').that.is.empty;
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.undefined;
         }
@@ -586,7 +586,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.be.undefined;
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.instanceOf(CustomError);
           expect(err).to.have.property('message', 'Could not update');
@@ -608,7 +608,7 @@ describe('[tags] Tags resolver', () => {
           expect(result).to.have.members(tagsThatAreAdded);
         } catch (err) {
           // To throw the error thrown by expect when expect in try fails
-          if (err instanceof AssertionError) throw err;
+          if (!(err instanceof CustomError)) throw err;
 
           expect(err).to.be.undefined;
         }
