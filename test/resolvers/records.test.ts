@@ -107,8 +107,7 @@ describe('[records] Records resolver', () => {
     _id: '123456789012',
     username: 'test',
     password: 'password',
-    tags: ['oldTag', 'tags'],
-    save: sinon.stub().resolvesThis()
+    tags: ['oldTag', 'tags']
   };
 
   let userFindByIdStub: SinonStub;
@@ -318,6 +317,54 @@ describe('[records] Records resolver', () => {
 
     describe('[DB]', () => {
       checkUserExistTest<ArgsType, RetType>(records.listRecords, null);
+    });
+
+    describe('[return value]', () => {
+      it('should return records sorted in descending order of id', async () => {
+        const dummyRecords = [
+          {
+            _id: '1',
+            userId: userInstance._id,
+            date: new Date(),
+            amount: 123.45,
+            type: RecordType.DEBIT,
+            tags: [],
+            description: 'ID = 1',
+            toJSON: sinon.stub().returnsThis()
+          },
+          {
+            _id: '2',
+            userId: userInstance._id,
+            date: new Date(),
+            amount: 123.45,
+            type: RecordType.DEBIT,
+            tags: [],
+            description: 'ID = 2',
+            toJSON: sinon.stub().returnsThis()
+          }
+        ];
+
+        const returnArr = dummyRecords.reverse();
+
+        const recordFindStub = sinon
+          .stub(Record, 'find')
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          .returns(dummyRecords);
+
+        const recordSortStub = sinon
+          .stub(dummyRecords, 'sort')
+          .returns(returnArr);
+
+        const result = await records.listRecords(null, mockReq as Request);
+
+        // expect(result).to.deep.equal(returnArr);
+        // have.ordered.members use when Order Wholeness Matters
+        expect(result).to.have.deep.ordered.members(returnArr);
+
+        recordFindStub.restore();
+        recordSortStub.restore();
+      });
     });
   });
 });

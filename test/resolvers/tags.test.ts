@@ -199,7 +199,7 @@ describe('[tags] Tags resolver', () => {
         );
 
         userInstance.save.callsFake(function (this: unknown) {
-          // have.members use when Order Wholeness Matters
+          // have.members use when Un-Order Wholeness Matters
           // will give timeout error when this fails
           expect((this as IUser).tags).to.have.members(tagsThatAreToBeSaved);
 
@@ -262,7 +262,7 @@ describe('[tags] Tags resolver', () => {
       it('should return only the tags stored in users document', async () => {
         const result = await tags.listTags(null, mockReq as Request);
 
-        // have.members use when Order Wholeness Matters
+        // have.members use when Un-Order Wholeness Matters
         expect(result).to.have.members(userInstance.tags);
       });
     });
@@ -452,7 +452,6 @@ describe('[tags] Tags resolver', () => {
         userInstance.save.callsFake(function (this: unknown) {
           const tags = (this as IUser).tags;
 
-          // have.members use when Order Wholeness Matters
           // will give timeout error when this fails
           expect(tags).to.include(mockArgs.newTag);
           expect(tags).to.not.include(mockArgs.oldTag);

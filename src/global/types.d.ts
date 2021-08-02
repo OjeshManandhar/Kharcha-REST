@@ -6,7 +6,7 @@ export type Token = {
 };
 
 // _id is not Mongoose.ObjectID in Record*
-// because it will ne sent and received as string
+// because it will not sent and received as string
 
 export type Record = {
   _id: string;
