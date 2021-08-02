@@ -196,6 +196,7 @@ export const editRecord: T.EditRecord = async (args, req) => {
     });
 
     record.tags = [...validTags];
+    record.description = trim(record.description);
 
     // Add changes
     Object.assign(existingRecord, record);
