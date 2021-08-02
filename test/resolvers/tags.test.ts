@@ -24,7 +24,7 @@ describe('[tags] Tags resolver', () => {
     fn: (args: Arg, req: Request) => Promise<Ret>,
     mockArgs: Arg
   ) {
-    describe('[atuh]', () => {
+    describe('[auth]', () => {
       it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = false i.e. not logged in", async () => {
         mockReq.isAuth = false;
         mockReq.userId = '123456789012';

@@ -31,7 +31,7 @@ describe('[records] Records resolver', () => {
     fn: (args: Arg, req: Request) => Promise<Ret>,
     mockArgs: Arg
   ) {
-    describe('[atuh]', () => {
+    describe('[auth]', () => {
       it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = false i.e. not logged in", async () => {
         mockReq.isAuth = false;
         mockReq.userId = '123456789012';
@@ -157,7 +157,7 @@ describe('[records] Records resolver', () => {
     authTests<ArgsType, RetType>(records.createRecord, mockArgs);
 
     describe('[input validation]', () => {
-      it("should throw  CustomError('Invalid Input') with data containting result of validateRecordInput()", async () => {
+      it("should throw CustomError('Invalid Input') with data containting result of validateRecordInput()", async () => {
         mockArgs.record = {
           date: new Date('2022-05-16'),
           amount: -100.0,
@@ -240,7 +240,7 @@ describe('[records] Records resolver', () => {
           expect(err).to.have.property('data').that.is.empty;
         }
 
-        recordStub;
+        recordStub.restore();
       });
     });
 
@@ -364,6 +364,163 @@ describe('[records] Records resolver', () => {
 
         recordFindStub.restore();
         recordSortStub.restore();
+      });
+    });
+  });
+
+  describe('[editRecord]', () => {
+    type ArgsType = Parameters<T.EditRecord>[0];
+    type RetType = GetPromiseResolveType<ReturnType<T.EditRecord>>;
+
+    const mockArgs: ArgsType = {
+      record: {
+        _id: '123',
+        date: new Date('2021-06-01'),
+        amount: 100.0,
+        type: RecordType.DEBIT,
+        tags: ['newTags', 'TAgs'],
+        description: '   description  '
+      }
+    };
+
+    beforeEach(() => {
+      mockArgs.record = {
+        _id: '123',
+        date: new Date('2021-06-01'),
+        amount: 100.0,
+        type: RecordType.DEBIT,
+        tags: ['newTags', 'TAgs'],
+        description: '   description  '
+      };
+    });
+
+    authTests<ArgsType, RetType>(records.editRecord, mockArgs);
+
+    describe('[input validation]', () => {
+      it("should throw CustomError('Invalid Input') with data about _id when _id is missing", async () => {
+        mockArgs.record._id = undefined;
+
+        const errorMessage = [
+          {
+            message: '_id is required and cannot be blank',
+            field: '_id'
+          }
+        ];
+
+        try {
+          const result = await records.editRecord(mockArgs, mockReq as Request);
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Invalid Input');
+          expect(err).to.have.property('status', 422);
+          expect(err)
+            .to.have.property('data')
+            .that.have.deep.members(errorMessage);
+        }
+      });
+
+      it("should throw CustomError('Invalid Input') with data containting result of validateRecordInput()", async () => {
+        mockArgs.record = {
+          date: new Date('2022-05-16'),
+          amount: -100.0,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          type: 'ASD',
+          tags: [],
+          description: ''
+        };
+
+        const errorsList = validateRecordInput(mockArgs.record);
+
+        try {
+          const result = await records.createRecord(
+            mockArgs,
+            mockReq as Request
+          );
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Invalid Input');
+          expect(err).to.have.property('status', 422);
+          expect(err)
+            .to.have.property('data')
+            .that.have.deep.members(errorsList);
+        }
+      });
+    });
+
+    describe('[DB]', () => {
+      checkUserExistTest<ArgsType, RetType>(records.editRecord, mockArgs);
+
+      it("should throw CustomError('Record not found') when record._id is invalid", async () => {
+        const recordStub = sinon.stub(Record, 'findById').resolves(null);
+
+        try {
+          const result = await records.editRecord(mockArgs, mockReq as Request);
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Record not found');
+          expect(err).to.have.property('status', 422);
+          expect(err)
+            .to.have.property('data')
+            .that.have.deep.members([
+              {
+                message: 'Invalid _id',
+                field: '_id'
+              }
+            ]);
+        }
+
+        recordStub.restore();
+      });
+
+      it("should throw CustomError('Unauthorized') when current user did not create the record", async () => {
+        const recordInstance = {
+          ...sinon.createStubInstance(Record),
+          _id: '123',
+          userId: '098765432109',
+          date: new Date('2021-06-01'),
+          amount: 100.0,
+          type: RecordType.DEBIT,
+          tags: ['newTags', 'TAgs'],
+          description: '   description  '
+        };
+
+        const recordStub = sinon
+          .stub(Record, 'findById')
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          .resolves(recordInstance);
+
+        try {
+          const result = await records.editRecord(mockArgs, mockReq as Request);
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Unauthorized');
+          expect(err).to.have.property('status', 401);
+          expect(err).to.have.property('data').that.is.empty;
+        }
+
+        recordStub.restore();
       });
     });
   });

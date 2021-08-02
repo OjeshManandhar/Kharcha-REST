@@ -526,7 +526,7 @@ describe('[users] User resolver', () => {
       sinon.restore();
     });
 
-    describe('[atuh]', () => {
+    describe('[auth]', () => {
       it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = false i.e. not logged in", () => {
         mockReq.isAuth = false;
         mockReq.userId = '123456789012';
@@ -767,7 +767,7 @@ describe('[users] User resolver', () => {
       sinon.restore();
     });
 
-    describe('[atuh]', () => {
+    describe('[auth]', () => {
       it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = false i.e. not logged in", () => {
         mockReq.isAuth = false;
         mockReq.userId = '123456789012';
