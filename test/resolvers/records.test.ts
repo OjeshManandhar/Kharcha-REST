@@ -104,7 +104,7 @@ describe('[records] Records resolver', () => {
   const userInstance = {
     // Override cannot override properties which are not function, I think
     ...sinon.createStubInstance<IUser>(User, {}),
-    _id: '123456789012',
+    _id: mockReq.userId,
     username: 'test',
     password: 'password',
     tags: ['oldTag', 'tags']
@@ -205,7 +205,7 @@ describe('[records] Records resolver', () => {
           .callsFake(function (this: IRecord) {
             const { userId, tags, description } = this;
 
-            // will give timeout error when aany of this fails
+            // will give timeout error when any of this fails
             expect(userId).to.not.be.null;
             expect(userId).to.not.be.undefined;
             expect(tags).to.have.deep.members(expectedValues.tags);
@@ -372,6 +372,16 @@ describe('[records] Records resolver', () => {
     type ArgsType = Parameters<T.EditRecord>[0];
     type RetType = GetPromiseResolveType<ReturnType<T.EditRecord>>;
 
+    const RECORD_INSTANCE_DATA = {
+      _id: '123',
+      userId: mockReq.userId,
+      date: new Date('2021-08-01'),
+      amount: 123.45,
+      type: RecordType.CREDIT,
+      tags: ['oldTag'],
+      description: 'description'
+    };
+
     const mockArgs: ArgsType = {
       record: {
         _id: '123',
@@ -379,11 +389,24 @@ describe('[records] Records resolver', () => {
         amount: 100.0,
         type: RecordType.DEBIT,
         tags: ['newTags', 'TAgs'],
-        description: '   description  '
+        description: '   should be trimmed  '
       }
     };
 
+    const recordInstance = {
+      ...sinon.createStubInstance(Record),
+      ...RECORD_INSTANCE_DATA,
+      save: sinon.stub().resolvesThis(),
+      toJSON: sinon.stub().returnsThis()
+    };
+
+    let recordFindByIdStub: SinonStub;
+
     beforeEach(() => {
+      Object.assign(recordInstance, RECORD_INSTANCE_DATA);
+      recordInstance.save = sinon.stub().resolvesThis();
+      recordInstance.toJSON = sinon.stub().returnsThis();
+
       mockArgs.record = {
         _id: '123',
         date: new Date('2021-06-01'),
@@ -392,6 +415,16 @@ describe('[records] Records resolver', () => {
         tags: ['newTags', 'TAgs'],
         description: '   description  '
       };
+
+      recordFindByIdStub = sinon
+        .stub(Record, 'findById')
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        .resolves(recordInstance);
+    });
+
+    afterEach(() => {
+      recordFindByIdStub.restore();
     });
 
     authTests<ArgsType, RetType>(records.editRecord, mockArgs);
@@ -462,7 +495,7 @@ describe('[records] Records resolver', () => {
       checkUserExistTest<ArgsType, RetType>(records.editRecord, mockArgs);
 
       it("should throw CustomError('Record not found') when record._id is invalid", async () => {
-        const recordStub = sinon.stub(Record, 'findById').resolves(null);
+        recordFindByIdStub.resolves(null);
 
         try {
           const result = await records.editRecord(mockArgs, mockReq as Request);
@@ -484,27 +517,10 @@ describe('[records] Records resolver', () => {
               }
             ]);
         }
-
-        recordStub.restore();
       });
 
       it("should throw CustomError('Unauthorized') when current user did not create the record", async () => {
-        const recordInstance = {
-          ...sinon.createStubInstance(Record),
-          _id: '123',
-          userId: '098765432109',
-          date: new Date('2021-06-01'),
-          amount: 100.0,
-          type: RecordType.DEBIT,
-          tags: ['newTags', 'TAgs'],
-          description: '   description  '
-        };
-
-        const recordStub = sinon
-          .stub(Record, 'findById')
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          .resolves(recordInstance);
+        recordInstance.userId = '098765432109';
 
         try {
           const result = await records.editRecord(mockArgs, mockReq as Request);
@@ -519,8 +535,107 @@ describe('[records] Records resolver', () => {
           expect(err).to.have.property('status', 401);
           expect(err).to.have.property('data').that.is.empty;
         }
+      });
 
-        recordStub.restore();
+      it('should only save valid tags & trimmed description', done => {
+        const expectedValues = {
+          ...mockArgs.record,
+          tags: ['tags'],
+          description: trim(mockArgs.record.description)
+        };
+
+        recordInstance.save.callsFake(function (this: IRecord) {
+          const { userId, date, amount, type, tags, description } = this;
+
+          // will give timeout error when any of this fails
+          expect(userId).to.equal(mockReq.userId);
+          expect(userId).to.equal(recordInstance.userId);
+          expect(date).to.equal(expectedValues.date);
+          expect(amount).to.equal(expectedValues.amount);
+          expect(type).to.equal(expectedValues.type);
+          expect(tags).to.have.deep.members(expectedValues.tags);
+          expect(description).to.equal(expectedValues.description);
+
+          done();
+        });
+
+        records.editRecord(mockArgs, mockReq as Request);
+      });
+
+      it("should throw CustomError('Could not edit') when edited record could not be saved", async () => {
+        recordInstance.save.resolves(null);
+
+        try {
+          const result = await records.editRecord(mockArgs, mockReq as Request);
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Could not edit');
+          expect(err).to.have.property('status', 500);
+          expect(err).to.have.property('data').that.is.empty;
+        }
+      });
+    });
+
+    describe('[return value]', () => {
+      it('should return data that is saved by .save()', async () => {
+        const expectedData = {
+          _id: '',
+          userId: '',
+          date: new Date(),
+          amount: 0,
+          type: RecordType.CREDIT,
+          tags: [''],
+          description: ''
+        };
+
+        recordInstance.save
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .callsFake(function (this: IRecord & Document<any, any>) {
+            /**
+             * Copying this to expectedData for comparision and changing
+             * expectedData._id to this._id.toString()
+             * expectedData.userId to this.userId.toString()
+             * as createRecord() will retirn _id as string
+             */
+            expectedData._id = this._id.toString();
+            expectedData.userId = this.userId.toString();
+            expectedData.date = this.date;
+            expectedData.amount = this.amount;
+            expectedData.type = this.type;
+            expectedData.tags = this.tags;
+            expectedData.description = this.description;
+
+            return this;
+          });
+
+        try {
+          const result = await records.editRecord(mockArgs, mockReq as Request);
+
+          expect(result).to.have.property('_id', expectedData._id);
+          expect(result).to.have.property('userId', expectedData.userId);
+          expect(result)
+            .to.have.property('date')
+            .that.deep.equals(expectedData.date);
+          expect(result).to.have.property('amount', expectedData.amount);
+          expect(result).to.have.property('type', expectedData.type);
+          expect(result)
+            .to.have.property('tags')
+            .that.have.deep.members(expectedData.tags);
+          expect(result).to.have.property(
+            'description',
+            expectedData.description
+          );
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.undefined;
+        }
       });
     });
   });

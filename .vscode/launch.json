@@ -20,7 +20,7 @@
         "ts-node/register",
         "-r",
         "dotenv/config",
-        "${workspaceFolder}/test/**/*.test.ts"
+        "${workspaceFolder}/test/resolvers/*.test.ts"
       ],
       "skipFiles": ["<node_internals>/**"],
       "console": "integratedTerminal",
