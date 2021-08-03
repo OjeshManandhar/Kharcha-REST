@@ -49,7 +49,11 @@ app.use(
   graphqlHTTP({
     schema: schema,
     rootValue: resolvers,
-    graphiql: DEV_FEATURE,
+    graphiql: DEV_FEATURE
+      ? {
+          headerEditorEnabled: true
+        }
+      : DEV_FEATURE,
     customFormatErrorFn: err => {
       if (!err.originalError) {
         return err;
