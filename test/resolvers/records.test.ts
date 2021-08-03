@@ -15,7 +15,7 @@ import CustomError from 'utils/customError';
 import { validateRecordInput } from 'utils/validation';
 
 // global
-import { RecordType } from 'global/enum';
+import { FilterCriteria, RecordType, TypeCriteria } from 'global/enum';
 
 // types
 import type { Request } from 'express';
@@ -32,7 +32,7 @@ describe('[records] Records resolver', () => {
     mockArgs: Arg
   ) {
     describe('[auth]', () => {
-      it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = false i.e. not logged in", async () => {
+      it("should throw CustomError('Unauthorized. Log in first', 401) if req.isAuth = false i.e. not logged in", async () => {
         mockReq.isAuth = false;
         mockReq.userId = '123456789012';
 
@@ -51,7 +51,7 @@ describe('[records] Records resolver', () => {
         }
       });
 
-      it("should throw CustomError('Unauthorized. Log out first', 401) if req.uesrId is falsy i.e. not logged in", async () => {
+      it("should throw CustomError('Unauthorized. Log in first', 401) if req.uesrId is falsy i.e. not logged in", async () => {
         mockReq.isAuth = true;
         mockReq.userId = undefined;
 
@@ -830,6 +830,35 @@ describe('[records] Records resolver', () => {
 
         recordStub.restore();
       });
+    });
+  });
+
+  describe('[filterRecords]', () => {
+    type ArgsType = Parameters<T.FilterRecords>[0];
+    type RetType = GetPromiseResolveType<ReturnType<T.FilterRecords>>;
+
+    const ARGS_CRITERIA: T.RecordFilter = {
+      idStart: '123',
+      idEnd: '456',
+      dateStart: new Date('2020-01-01'),
+      dateEnd: new Date('2020-06-01'),
+      amountStart: 100.0,
+      amountEnd: 1000.0,
+      type: TypeCriteria.ANY,
+      tagsType: FilterCriteria.ANY,
+      tags: ['oldtags', 'tags'],
+      description: '',
+      filterCriteria: FilterCriteria.ANY
+    };
+
+    const mockArgs: ArgsType = {
+      criteria: ARGS_CRITERIA
+    };
+
+    authTests<ArgsType, RetType>(records.filterRecords, mockArgs);
+
+    describe('[DB]', () => {
+      checkUserExistTest<ArgsType, RetType>(records.filterRecords, mockArgs);
     });
   });
 });

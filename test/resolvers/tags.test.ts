@@ -25,7 +25,7 @@ describe('[tags] Tags resolver', () => {
     mockArgs: Arg
   ) {
     describe('[auth]', () => {
-      it("should throw CustomError('Unauthorized. Log out first', 401) if req.isAuth = false i.e. not logged in", async () => {
+      it("should throw CustomError('Unauthorized. Log in first', 401) if req.isAuth = false i.e. not logged in", async () => {
         mockReq.isAuth = false;
         mockReq.userId = '123456789012';
 
@@ -44,7 +44,7 @@ describe('[tags] Tags resolver', () => {
         }
       });
 
-      it("should throw CustomError('Unauthorized. Log out first', 401) if req.uesrId is falsy i.e. not logged in", async () => {
+      it("should throw CustomError('Unauthorized. Log in first', 401) if req.uesrId is falsy i.e. not logged in", async () => {
         mockReq.isAuth = true;
         mockReq.userId = undefined;
 
