@@ -12,7 +12,7 @@ import * as records from 'gql/resolvers/records';
 
 // utils
 import CustomError from 'utils/customError';
-import { validateRecordInput } from 'utils/validation';
+import { validateRecordInput, validateRecordFilter } from 'utils/validation';
 
 // global
 import { FilterCriteria, RecordType, TypeCriteria } from 'global/enum';
@@ -855,7 +855,44 @@ describe('[records] Records resolver', () => {
       criteria: ARGS_CRITERIA
     };
 
+    beforeEach(() => {
+      mockArgs.criteria = ARGS_CRITERIA;
+    });
+
     authTests<ArgsType, RetType>(records.filterRecords, mockArgs);
+
+    describe('[input validation]', () => {
+      it("should throw CustomError('Invalid Input') with data containting result of validateRecordInput()", async () => {
+        mockArgs.criteria = {
+          idStart: ARGS_CRITERIA.idEnd,
+          idEnd: ARGS_CRITERIA.idStart,
+          dateStart: new Date('2022-02-02'),
+          amountStart: -100.0,
+          amountEnd: -50.0
+        };
+
+        const errorsList = validateRecordFilter(mockArgs.criteria);
+
+        try {
+          const result = await records.filterRecords(
+            mockArgs,
+            mockReq as Request
+          );
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Invalid Input');
+          expect(err).to.have.property('status', 422);
+          expect(err)
+            .to.have.property('data')
+            .that.have.deep.members(errorsList);
+        }
+      });
+    });
 
     describe('[DB]', () => {
       checkUserExistTest<ArgsType, RetType>(records.filterRecords, mockArgs);
