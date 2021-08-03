@@ -6,19 +6,6 @@ import type { Record, RecordInput, RecordFilter } from 'global/types';
 
 export type { Record, RecordInput, RecordFilter };
 
-export type GenerateQuery<T> = (
-  idStart: ?T,
-  idEnd: ?T
-) =>
-  | T
-  | {
-      $gte: T;
-      $lte: T;
-    }
-  | { $gte: T }
-  | { $lte: T }
-  | null;
-
 export type CreateRecord = (
   args: { record: RecordInput },
   req: Request

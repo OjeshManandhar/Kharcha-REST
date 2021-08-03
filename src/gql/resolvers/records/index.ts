@@ -10,6 +10,7 @@ import Record from 'models/record';
 import { TypeCriteria, FilterCriteria } from 'global/enum';
 
 // utils
+import generateQuery from 'utils/generateQuery';
 import commonErrorHandler from 'utils/commonErrorHandler';
 import CustomError, { ErrorData } from 'utils/customError';
 import {
@@ -20,23 +21,6 @@ import {
 
 // types
 import type * as T from './types';
-
-const generateQuery: T.GenerateQuery<mongoose.Types.ObjectId | Date | number> =
-  (start, end) => {
-    if (start && end) {
-      if (start.toString() === end.toString()) {
-        return start;
-      }
-
-      return { $gte: start, $lte: end };
-    } else if (start && !end) {
-      return { $gte: start };
-    } else if (!start && end) {
-      return { $lte: end };
-    }
-
-    return null;
-  };
 
 export const createRecord: T.CreateRecord = async (args, req) => {
   // Auth
