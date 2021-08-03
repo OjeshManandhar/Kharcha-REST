@@ -266,8 +266,8 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
 
     // _id
     const idQuery = generateQuery(
-      idStart ? mongoose.Types.ObjectId(idStart) : null,
-      idEnd ? mongoose.Types.ObjectId(idEnd) : null
+      idStart ? mongoose.Types.ObjectId(idStart) : undefined,
+      idEnd ? mongoose.Types.ObjectId(idEnd) : undefined
     );
     if (idQuery) {
       queryList.push({ _id: idQuery });

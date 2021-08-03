@@ -18,7 +18,7 @@ const generateQuery: GenerateQuery<Types.ObjectId | Date | number> = (
     return { $lte: end };
   }
 
-  return null;
+  return undefined;
 };
 
 export default generateQuery;

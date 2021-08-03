@@ -26,7 +26,7 @@ describe("[generateQuery] Query generator for filterRecords (Using 'numbers' onl
   it('should return object with only $gte when only start is given', () => {
     const start = 5;
 
-    const result = generateQuery(start, null);
+    const result = generateQuery(start, undefined);
 
     expect(result).to.have.property('$gte', start);
     expect(result).to.not.have.property('$lte');
@@ -35,13 +35,13 @@ describe("[generateQuery] Query generator for filterRecords (Using 'numbers' onl
   it('should return object with only $lte when only end is given', () => {
     const end = 5;
 
-    const result = generateQuery(null, end);
+    const result = generateQuery(undefined, end);
 
     expect(result).to.not.have.property('$gte');
     expect(result).to.have.property('$lte', end);
   });
 
-  it('should return null when both start and end are not given', () => {
-    expect(generateQuery(null, null)).to.be.null;
+  it('should return undefined when both start and end are not given', () => {
+    expect(generateQuery(undefined, undefined)).to.be.undefined;
   });
 });

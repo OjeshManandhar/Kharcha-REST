@@ -28,15 +28,15 @@ export type RecordInput = {
 };
 
 export type RecordFilter = {
-  idStart: ?string;
-  idEnd: ?string;
-  dateStart: ?Date;
-  dateEnd: ?Date;
-  amountStart: ?number;
-  amountEnd: ?number;
-  type: ?TypeCriteria;
-  tagsType: ?FilterCriteria;
-  tags: ?Array<string>;
-  description: ?string;
-  filterCriteria: ?FilterCriteria;
+  idStart?: string;
+  idEnd?: string;
+  dateStart?: Date;
+  dateEnd?: Date;
+  amountStart?: number;
+  amountEnd?: number;
+  type?: TypeCriteria;
+  tagsType?: FilterCriteria;
+  tags?: Array<string>;
+  description?: string;
+  filterCriteria?: FilterCriteria;
 };

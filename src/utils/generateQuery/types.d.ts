@@ -1,6 +1,6 @@
 export type GenerateQuery<T> = (
-  idStart: ?T,
-  idEnd: ?T
+  idStart?: T,
+  idEnd?: T
 ) =>
   | T
   | {
@@ -9,4 +9,4 @@ export type GenerateQuery<T> = (
     }
   | { $gte: T }
   | { $lte: T }
-  | null;
+  | undefined;

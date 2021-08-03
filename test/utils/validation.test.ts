@@ -250,7 +250,7 @@ describe('[validation] Validation utility', () => {
 
       describe('[_id]', () => {
         it('should not return error on idStart or idEnd field if any one is not given', () => {
-          criteria.idStart = null;
+          criteria.idStart = undefined;
           criteria.idEnd = '234';
 
           expect(validation.validateRecordFilter(criteria))
@@ -261,7 +261,7 @@ describe('[validation] Validation utility', () => {
             });
 
           criteria.idStart = '123';
-          criteria.idEnd = null;
+          criteria.idEnd = undefined;
 
           expect(validation.validateRecordFilter(criteria))
             .to.be.an('array')
@@ -295,8 +295,8 @@ describe('[validation] Validation utility', () => {
 
       describe('[date]', () => {
         it('should not return error on field dateStart if it is not given or is given and is before today', () => {
-          criteria.dateStart = null;
-          criteria.dateEnd = null;
+          criteria.dateStart = undefined;
+          criteria.dateEnd = undefined;
           expect(validation.validateRecordFilter(criteria))
             .to.be.an('array')
             .and.not.deep.include({
@@ -305,7 +305,7 @@ describe('[validation] Validation utility', () => {
             });
 
           criteria.dateStart = new Date('2021-06-12');
-          criteria.dateEnd = null;
+          criteria.dateEnd = undefined;
           expect(validation.validateRecordFilter(criteria))
             .to.be.an('array')
             .and.not.deep.include({
@@ -316,7 +316,7 @@ describe('[validation] Validation utility', () => {
 
         it('should return error on field dateStart if it is given and after today', () => {
           criteria.dateStart = new Date('2022-01-01');
-          criteria.dateEnd = null;
+          criteria.dateEnd = undefined;
 
           expect(validation.validateRecordFilter(criteria))
             .to.be.an('array')
@@ -327,8 +327,8 @@ describe('[validation] Validation utility', () => {
         });
 
         it('should not return error on field dateEnd if it is not given or is given and is before today', () => {
-          criteria.dateStart = null;
-          criteria.dateEnd = null;
+          criteria.dateStart = undefined;
+          criteria.dateEnd = undefined;
           expect(validation.validateRecordFilter(criteria))
             .to.be.an('array')
             .and.not.deep.include({
@@ -336,7 +336,7 @@ describe('[validation] Validation utility', () => {
               field: 'dateEnd'
             });
 
-          criteria.dateStart = null;
+          criteria.dateStart = undefined;
           criteria.dateEnd = new Date('2021-06-12');
           expect(validation.validateRecordFilter(criteria))
             .to.be.an('array')
@@ -347,7 +347,7 @@ describe('[validation] Validation utility', () => {
         });
 
         it('should return error on field dateEnd if it is given and after today', () => {
-          criteria.dateStart = null;
+          criteria.dateStart = undefined;
           criteria.dateEnd = new Date('2022-01-01');
 
           expect(validation.validateRecordFilter(criteria))
@@ -385,8 +385,8 @@ describe('[validation] Validation utility', () => {
 
       describe('[amount]', () => {
         it('should not return error on field amountStart if it is not given or is given and >= 0', () => {
-          criteria.amountStart = null;
-          criteria.amountEnd = null;
+          criteria.amountStart = undefined;
+          criteria.amountEnd = undefined;
           expect(validation.validateRecordFilter(criteria))
             .to.be.an('array')
             .and.not.deep.include({
@@ -395,7 +395,7 @@ describe('[validation] Validation utility', () => {
             });
 
           criteria.amountStart = 0;
-          criteria.amountEnd = null;
+          criteria.amountEnd = undefined;
           expect(validation.validateRecordFilter(criteria))
             .to.be.an('array')
             .and.not.deep.include({
@@ -406,7 +406,7 @@ describe('[validation] Validation utility', () => {
 
         it('should return error on field amountStart if it is given and is < 0', () => {
           criteria.amountStart = -100;
-          criteria.amountEnd = null;
+          criteria.amountEnd = undefined;
 
           expect(validation.validateRecordFilter(criteria))
             .to.be.an('array')
@@ -417,8 +417,8 @@ describe('[validation] Validation utility', () => {
         });
 
         it('should not return error on field amountEnd if it is not given or is given and > 0', () => {
-          criteria.amountStart = null;
-          criteria.amountEnd = null;
+          criteria.amountStart = undefined;
+          criteria.amountEnd = undefined;
           expect(validation.validateRecordFilter(criteria))
             .to.be.an('array')
             .and.not.deep.include({
@@ -426,7 +426,7 @@ describe('[validation] Validation utility', () => {
               field: 'amountEnd'
             });
 
-          criteria.amountStart = null;
+          criteria.amountStart = undefined;
           criteria.amountEnd = 100;
           expect(validation.validateRecordFilter(criteria))
             .to.be.an('array')
@@ -437,7 +437,7 @@ describe('[validation] Validation utility', () => {
         });
 
         it('should return error on field amountEnd if it is given and <= 0', () => {
-          criteria.amountStart = null;
+          criteria.amountStart = undefined;
           criteria.amountEnd = 0;
 
           expect(validation.validateRecordFilter(criteria))
