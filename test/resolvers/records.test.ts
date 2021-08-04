@@ -1311,8 +1311,6 @@ describe('[records] Records resolver', () => {
             mockReq as Request
           );
 
-          console.log('result:', result);
-
           // expect(result).to.deep.equal(returnArr);
           // have.ordered.members use when Order Wholeness Matters
           expect(result).to.have.deep.ordered.members(dummyRecords.reverse());

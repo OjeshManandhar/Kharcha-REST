@@ -395,6 +395,11 @@ export const filterRecords: T.FilterRecords = async (args, req) => {
             filterdRecords.push(rec);
           }
         });
+
+        // sort according to id descending
+        filterdRecords.sort((elem1: T.Record, elem2: T.Record) =>
+          elem1._id.toString() > elem2._id.toString() ? -1 : 1
+        );
       }
     }
 
