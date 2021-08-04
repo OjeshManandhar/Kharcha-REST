@@ -2,6 +2,7 @@
 import { expect } from 'chai';
 import trim from 'validator/lib/trim';
 import sinon, { SinonStub } from 'sinon';
+import { Types } from 'mongoose';
 
 // model
 import User, { IUser } from 'models/user';
@@ -21,6 +22,7 @@ import { FilterCriteria, RecordType, TypeCriteria } from 'global/enum';
 import type { Request } from 'express';
 import type { Document } from 'mongoose';
 import type * as T from 'gql/resolvers/records/types';
+import generateQuery from 'utils/generateQuery';
 
 type GetPromiseResolveType<T> = T extends PromiseLike<infer U>
   ? GetPromiseResolveType<U> // For recusive ness
@@ -838,11 +840,9 @@ describe('[records] Records resolver', () => {
     type RetType = GetPromiseResolveType<ReturnType<T.FilterRecords>>;
 
     const ARGS_CRITERIA: T.RecordFilter = {
-      idStart: '123',
-      idEnd: '456',
+      idStart: '60bc3ae5375e153a1b9d0989',
+      idEnd: '60d0b356acf8e8eeacfb3033',
       dateStart: new Date('2020-01-01'),
-      dateEnd: new Date('2020-06-01'),
-      amountStart: 100.0,
       amountEnd: 1000.0,
       type: TypeCriteria.ANY,
       tagsType: FilterCriteria.ANY,
@@ -896,6 +896,285 @@ describe('[records] Records resolver', () => {
 
     describe('[DB]', () => {
       checkUserExistTest<ArgsType, RetType>(records.filterRecords, mockArgs);
+
+      it("should throw CustomError('Invalid Input') when no valid criteria is given", async () => {
+        mockArgs.criteria = {};
+
+        try {
+          const result = await records.filterRecords(
+            mockArgs,
+            mockReq as Request
+          );
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Invalid Input');
+          expect(err).to.have.property('status', 422);
+          expect(err)
+            .to.have.property('data')
+            .that.have.deep.members([
+              {
+                message: 'Enter at least one valid criteria'
+              }
+            ]);
+        }
+      });
+
+      it("should throw CustomError('Invalid Input') when all given tags are invalid", async () => {
+        mockArgs.criteria = { tags: ['new tags', 'not existing'] };
+
+        try {
+          const result = await records.filterRecords(
+            mockArgs,
+            mockReq as Request
+          );
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Invalid Input');
+          expect(err).to.have.property('status', 422);
+          expect(err)
+            .to.have.property('data')
+            .that.include.deep.members([
+              {
+                message: 'No valid tags',
+                field: 'tags'
+              }
+            ]);
+        }
+      });
+
+      it(`should call find once with valid query when filterCriteria is ${FilterCriteria.ALL} and description is not given`, async () => {
+        mockArgs.criteria.description = '';
+        mockArgs.criteria.filterCriteria = FilterCriteria.ALL;
+
+        const expectedQuery = {
+          userId: mockReq.userId,
+          $and: [
+            {
+              _id: generateQuery(
+                Types.ObjectId(mockArgs.criteria.idStart),
+                Types.ObjectId(mockArgs.criteria.idEnd)
+              )
+            },
+            { date: generateQuery(mockArgs.criteria.dateStart) },
+            { amount: generateQuery(undefined, mockArgs.criteria.amountEnd) },
+            { tags: { $in: ['tags'] } }
+          ]
+        };
+
+        const fakeFind = sinon.fake.throws(new CustomError('Testing error'));
+        const recordStub = sinon.stub(Record, 'find').callsFake(fakeFind);
+
+        try {
+          const result = await records.filterRecords(
+            mockArgs,
+            mockReq as Request
+          );
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Testing error');
+          expect(err).to.have.property('status', 500);
+          expect(err).to.have.property('data').that.is.empty;
+
+          const query = fakeFind.getCall(0).firstArg;
+
+          expect(fakeFind.callCount).to.equal(1);
+          expect(query).to.deep.equal(expectedQuery);
+        }
+
+        recordStub.restore();
+      });
+
+      it(`should call find once with valid query when filterCriteria is ${FilterCriteria.ALL} and description is given`, async () => {
+        mockArgs.criteria.description = '    description   ';
+        mockArgs.criteria.filterCriteria = FilterCriteria.ALL;
+
+        const expectedQuery = {
+          userId: mockReq.userId,
+          $and: [
+            {
+              _id: generateQuery(
+                Types.ObjectId(mockArgs.criteria.idStart),
+                Types.ObjectId(mockArgs.criteria.idEnd)
+              )
+            },
+            { date: generateQuery(mockArgs.criteria.dateStart) },
+            { amount: generateQuery(undefined, mockArgs.criteria.amountEnd) },
+            { tags: { $in: ['tags'] } },
+            {
+              $text: {
+                $caseSensitive: false,
+                $search: mockArgs.criteria.description
+              }
+            }
+          ]
+        };
+
+        const fakeFind = sinon.fake.throws(new CustomError('Testing error'));
+        const recordStub = sinon.stub(Record, 'find').callsFake(fakeFind);
+
+        try {
+          const result = await records.filterRecords(
+            mockArgs,
+            mockReq as Request
+          );
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Testing error');
+          expect(err).to.have.property('status', 500);
+          expect(err).to.have.property('data').that.is.empty;
+
+          const query = fakeFind.getCall(0).firstArg;
+
+          expect(fakeFind.callCount).to.equal(1);
+          expect(query).to.deep.equal(expectedQuery);
+        }
+
+        recordStub.restore();
+      });
+
+      it(`should call find once with valid query when filterCriteria is ${FilterCriteria.ANY} and description is not given`, async () => {
+        mockArgs.criteria.description = '';
+        mockArgs.criteria.filterCriteria = FilterCriteria.ANY;
+
+        const expectedQuery = {
+          userId: mockReq.userId,
+          $or: [
+            {
+              _id: generateQuery(
+                Types.ObjectId(mockArgs.criteria.idStart),
+                Types.ObjectId(mockArgs.criteria.idEnd)
+              )
+            },
+            { date: generateQuery(mockArgs.criteria.dateStart) },
+            { amount: generateQuery(undefined, mockArgs.criteria.amountEnd) },
+            { tags: { $in: ['tags'] } }
+          ]
+        };
+
+        const fakeFind = sinon.fake.throws(new CustomError('Testing error'));
+        const recordStub = sinon.stub(Record, 'find').callsFake(fakeFind);
+
+        try {
+          const result = await records.filterRecords(
+            mockArgs,
+            mockReq as Request
+          );
+
+          expect(result).to.be.undefined;
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.instanceOf(CustomError);
+          expect(err).to.have.property('message', 'Testing error');
+          expect(err).to.have.property('status', 500);
+          expect(err).to.have.property('data').that.is.empty;
+
+          const query = fakeFind.getCall(0).firstArg;
+
+          expect(fakeFind.callCount).to.equal(1);
+          expect(query).to.deep.equal(expectedQuery);
+        }
+
+        recordStub.restore();
+      });
+
+      it(`should call find twice with valid query when filterCriteria is ${FilterCriteria.ANY} and description is given`, async () => {
+        mockArgs.criteria.description = '    description   ';
+        mockArgs.criteria.filterCriteria = FilterCriteria.ANY;
+
+        const expectedFirstQuery = {
+          userId: mockReq.userId,
+          $or: [
+            {
+              _id: generateQuery(
+                Types.ObjectId(mockArgs.criteria.idStart),
+                Types.ObjectId(mockArgs.criteria.idEnd)
+              )
+            },
+            { date: generateQuery(mockArgs.criteria.dateStart) },
+            { amount: generateQuery(undefined, mockArgs.criteria.amountEnd) },
+            { tags: { $in: ['tags'] } }
+          ]
+        };
+        const expectedSecondQuery = {
+          userId: mockReq.userId,
+          $text: {
+            $caseSensitive: false,
+            $search: mockArgs.criteria.description
+          }
+        };
+
+        const dummyRecords = [
+          {
+            _id: '1',
+            userId: userInstance._id,
+            date: new Date(),
+            amount: 123.45,
+            type: RecordType.DEBIT,
+            tags: [],
+            description: 'ID = 1',
+            toJSON: sinon.stub().returnsThis()
+          },
+          {
+            _id: '2',
+            userId: userInstance._id,
+            date: new Date(),
+            amount: 123.45,
+            type: RecordType.DEBIT,
+            tags: [],
+            description: 'ID = 2',
+            toJSON: sinon.stub().returnsThis()
+          }
+        ];
+        const fakeFind = sinon.fake.returns(dummyRecords);
+        const recordFindStub = sinon.stub(Record, 'find').callsFake(fakeFind);
+        const recordSortStub = sinon.stub(dummyRecords, 'sort').returnsThis();
+
+        try {
+          const result = await records.filterRecords(
+            mockArgs,
+            mockReq as Request
+          );
+
+          expect(result).to.not.be.undefined;
+
+          const firstQuery = fakeFind.getCall(0).firstArg;
+          const secondQuery = fakeFind.getCall(1).firstArg;
+
+          expect(fakeFind.callCount).to.equal(2);
+          expect(firstQuery).to.deep.equal(expectedFirstQuery);
+          expect(secondQuery).to.deep.equal(expectedSecondQuery);
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.undefined;
+        }
+
+        recordFindStub.restore();
+        recordSortStub.restore();
+      });
     });
   });
 });
