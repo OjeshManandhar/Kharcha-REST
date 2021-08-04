@@ -19,7 +19,7 @@ import { validateRecordInput, validateRecordFilter } from 'utils/validation';
 import { FilterCriteria, RecordType, TypeCriteria } from 'global/enum';
 
 // types
-import type { Request } from 'express';
+import { Request } from 'express';
 import type { Document } from 'mongoose';
 import type * as T from 'gql/resolvers/records/types';
 import generateQuery from 'utils/generateQuery';
@@ -358,11 +358,18 @@ describe('[records] Records resolver', () => {
           .stub(dummyRecords, 'sort')
           .returns(returnArr);
 
-        const result = await records.listRecords(null, mockReq as Request);
+        try {
+          const result = await records.listRecords(null, mockReq as Request);
 
-        // expect(result).to.deep.equal(returnArr);
-        // have.ordered.members use when Order Wholeness Matters
-        expect(result).to.have.deep.ordered.members(returnArr);
+          // expect(result).to.deep.equal(returnArr);
+          // have.ordered.members use when Order Wholeness Matters
+          expect(result).to.have.deep.ordered.members(returnArr);
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.undefined;
+        }
 
         recordFindStub.restore();
         recordSortStub.restore();
@@ -1174,6 +1181,151 @@ describe('[records] Records resolver', () => {
 
         recordFindStub.restore();
         recordSortStub.restore();
+      });
+    });
+
+    describe('[return value]', () => {
+      const dummyRecords = [
+        {
+          _id: '1',
+          userId: userInstance._id,
+          date: new Date('2021-01-01'),
+          amount: 100.0,
+          type: RecordType.DEBIT,
+          tags: ['tags'],
+          description: 'ID = 1',
+          toJSON: sinon.stub().returnsThis()
+        },
+        {
+          _id: '2',
+          userId: userInstance._id,
+          date: new Date('2021-02-01'),
+          amount: 100.0,
+          type: RecordType.CREDIT,
+          tags: ['oldTag'],
+          description: 'ID = 2',
+          toJSON: sinon.stub().returnsThis()
+        },
+        {
+          _id: '3',
+          userId: userInstance._id,
+          date: new Date('2021-03-01'),
+          amount: 50.0,
+          type: RecordType.DEBIT,
+          tags: ['oldTag', 'tags'],
+          description: '    description   ',
+          toJSON: sinon.stub().returnsThis()
+        }
+      ];
+
+      it(`should return found records sorted in descending order of id when filterCriteria is ${FilterCriteria.ALL}`, async () => {
+        mockArgs.criteria.filterCriteria = FilterCriteria.ALL;
+
+        const returnArr = dummyRecords.reverse();
+
+        const recordFindStub = sinon
+          .stub(Record, 'find')
+          .callsFake(sinon.fake.returns(dummyRecords));
+
+        const recordSortStub = sinon
+          .stub(dummyRecords, 'sort')
+          .returns(returnArr);
+
+        try {
+          const result = await records.filterRecords(
+            mockArgs,
+            mockReq as Request
+          );
+
+          // expect(result).to.deep.equal(returnArr);
+          // have.ordered.members use when Order Wholeness Matters
+          expect(result).to.have.deep.ordered.members(returnArr);
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.undefined;
+        }
+
+        recordFindStub.restore();
+        recordSortStub.restore();
+      });
+
+      it(`should return found records sorted in descending order of id when filterCriteria is ${FilterCriteria.ANY} any description is not given`, async () => {
+        mockArgs.criteria.description = '';
+        mockArgs.criteria.filterCriteria = FilterCriteria.ANY;
+
+        const returnArr = dummyRecords.reverse();
+
+        const recordFindStub = sinon
+          .stub(Record, 'find')
+          .callsFake(sinon.fake.returns(dummyRecords));
+
+        const recordSortStub = sinon
+          .stub(dummyRecords, 'sort')
+          .returns(returnArr);
+
+        try {
+          const result = await records.filterRecords(
+            mockArgs,
+            mockReq as Request
+          );
+
+          // expect(result).to.deep.equal(returnArr);
+          // have.ordered.members use when Order Wholeness Matters
+          expect(result).to.have.deep.ordered.members(returnArr);
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.undefined;
+        }
+
+        recordFindStub.restore();
+        recordSortStub.restore();
+      });
+
+      it(`should return found records only once sorted in descending order of id when filterCriteria is ${FilterCriteria.ANY} any description is given`, async () => {
+        mockArgs.criteria.description = '    description   ';
+        mockArgs.criteria.filterCriteria = FilterCriteria.ANY;
+
+        const firstResponse = [dummyRecords[0], dummyRecords[1]];
+        const secondResponse = [dummyRecords[1], dummyRecords[2]];
+
+        const recordFindStub = sinon
+          .stub(Record, 'find')
+          .onCall(0)
+          .callsFake(sinon.fake.returns(firstResponse))
+          .onCall(1)
+          .callsFake(sinon.fake.returns(secondResponse));
+        const firstResponseSortStub = sinon
+          .stub(firstResponse, 'sort')
+          .returns(firstResponse.reverse());
+        const secondResponseSortStub = sinon
+          .stub(secondResponse, 'sort')
+          .returns(secondResponse.reverse());
+
+        try {
+          const result = await records.filterRecords(
+            mockArgs,
+            mockReq as Request
+          );
+
+          console.log('result:', result);
+
+          // expect(result).to.deep.equal(returnArr);
+          // have.ordered.members use when Order Wholeness Matters
+          expect(result).to.have.deep.ordered.members(dummyRecords.reverse());
+        } catch (err) {
+          // To throw the error thrown by expect when expect in try fails
+          if (!(err instanceof CustomError)) throw err;
+
+          expect(err).to.be.undefined;
+        }
+
+        recordFindStub.restore();
+        firstResponseSortStub.restore();
+        secondResponseSortStub.restore();
       });
     });
   });
